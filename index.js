@@ -5,6 +5,8 @@ import routes from './src/routes/index.js';
 
 dotenv.config();
 
+import './src/db/connection.js'; // solo para verificar conexión a la base de datos
+
 const app = express();
 const port = process.env.PORT || 5000;
 
