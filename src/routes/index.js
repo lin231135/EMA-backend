@@ -1,8 +1,8 @@
-import express from 'express';
-const router = express.Router();
+import { Router } from 'express';
+import authRoutes from './auth.routes.js';
 
-router.get('/', (req, res) => {
-  res.json({ message: 'API funcionando correctamente con Bun 🚀' });
-});
+const router = Router();
+
+router.use('/auth', authRoutes);
 
 export default router;
