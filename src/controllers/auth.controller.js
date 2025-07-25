@@ -7,7 +7,7 @@ export const login = async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT u.id, u.name, u.last_name, u.email, u.password, r.role 
+      `SELECT u.id, u.name, u.last_name, u.email, u.password, u.is_first_login ,r.role 
        FROM Users u
        JOIN Role r ON u.role_id = r.id
        WHERE u.email = $1`,
@@ -39,7 +39,8 @@ export const login = async (req, res) => {
         name: user.name,
         last_name: user.last_name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        is_first_login: user.is_first_login
       }
     });
   } catch (error) {
@@ -86,5 +87,36 @@ export const register = async (req, res) => {
   } catch (error) {
     console.error('Error en register:', error);
     res.status(500).json({ message: 'Error al registrar usuario' });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+
+  try {
+    const result = await db.query('SELECT password FROM Users WHERE id = $1', [userId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'La contraseña actual es incorrecta' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db.query(
+      `UPDATE Users SET password = $1, is_first_login = FALSE WHERE id = $2`,
+      [hashedPassword, userId]
+    );
+
+    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al actualizar contraseña:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };

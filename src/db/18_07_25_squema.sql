@@ -68,6 +68,9 @@ CREATE TABLE Student_course (
 
 ALTER TABLE Users ADD FOREIGN KEY (role_id) REFERENCES Role (id);
 
+ALTER TABLE Users ADD COLUMN is_first_login BOOLEAN DEFAULT TRUE;
+
+
 ALTER TABLE Child_address ADD FOREIGN KEY (address_id) REFERENCES Address (id);
 
 ALTER TABLE Child_address ADD FOREIGN KEY (child_id) REFERENCES Child (id);
