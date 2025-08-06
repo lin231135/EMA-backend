@@ -5,7 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "bun index.js",
-    "hash:passwords": "bun src/scripts/hashPasswords.js"
+    "hash:passwords": "bun src/scripts/hashPasswords.js",
+    "test": "bun test",
+    "test:auth": "bun test src/__tests__/auth.test.js",
+    "test:integration": "bun test src/__tests__/auth.integration.test.js",
+    "test:academy": "bun test src/__tests__/academy.integration.test.js",
+    "test:security": "bun test src/__tests__/security.test.js",
+    "test:all": "bun test src/__tests__/",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:report": "bun src/scripts/runAllTests.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
