@@ -1,0 +1,54 @@
+name: Backend Tests
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Bun tests (Postgres service)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elliesdb_test
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d elliesdb_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.1.12
+
+      - name: Install deps
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Run tests with coverage
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: elliesdb_test
+          JWT_SECRET: supersecret
+        run: bun test --coverage
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage

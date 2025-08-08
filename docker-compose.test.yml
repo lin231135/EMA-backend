@@ -1,0 +1,42 @@
+services:
+  db_test:
+    image: postgres:16
+    container_name: ema-db-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: elliesdb_test
+    ports:
+      - "55432:5432"  # opcional: para conectarte desde el host si quieres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d elliesdb_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - ema_db_test_data:/var/lib/postgresql/data
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ema-backend-tests
+    depends_on:
+      db_test:
+        condition: service_healthy
+    environment:
+      NODE_ENV: test
+      DB_HOST: db_test
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: elliesdb_test
+      JWT_SECRET: supersecret
+    command: >
+      sh -c "
+        echo '✅ DB lista (healthcheck). Ejecutando tests...' &&
+        bun test --coverage
+      "
+
+volumes:
+  ema_db_test_data:
