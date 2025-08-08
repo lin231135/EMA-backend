@@ -1,9 +1,22 @@
-name: Backend Tests
+name: Backend Tests (CI)
 
 on:
-  pull_request:
+  # Corre en cada push a ramas de sprint
   push:
-    branches: ["main"]
+    branches:
+      - "Sprint-*"
+  # Y cuando se abre/actualiza un PR hacia main
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  NODE_ENV: test
+  JWT_SECRET: supersecret
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5432
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  DB_NAME: elliesdb_test
 
 jobs:
   test:
@@ -14,41 +27,94 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: elliesdb_test
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+          POSTGRES_DB: ${{ env.DB_NAME }}
         ports: [ "5432:5432" ]
         options: >-
-          --health-cmd="pg_isready -U postgres -d elliesdb_test"
+          --health-cmd="pg_isready -U ${{ env.DB_USER }} -d ${{ env.DB_NAME }}"
           --health-interval=5s
           --health-timeout=5s
-          --health-retries=20
+          --health-retries=30
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.12
+          bun-version: "1.1.12"
 
       - name: Install deps
         run: bun install --frozen-lockfile || bun install
 
+      - name: Wait for Postgres (extra guard)
+        run: |
+          until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME"; do
+            echo "⏳ waiting for db..."; sleep 2;
+          done
+
+      # Carga de esquema idéntica a como lo ejecutas en local
+      - name: Bootstrap DB schema
+        run: |
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/01_schema.sql
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/02_normalization.sql
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/03_indexes.sql
+          # Auditoría opcional: si falla, no rompe el pipeline
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/04_audit.sql || true
+
       - name: Run tests with coverage
-        env:
-          NODE_ENV: test
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: elliesdb_test
-          JWT_SECRET: supersecret
         run: bun test --coverage
 
-      - name: Upload coverage
+      - name: Upload coverage (artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
-          path: coverage
+          path: .coverage
+
+      # --------- Notificaciones nativas (comentario en PR) ----------
+
+      - name: Comment PR on success
+        if: ${{ success() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              '✅ **Backend CI OK**',
+              `**Branch:** ${context.payload.pull_request.head.ref}`,
+              `**Actor:** ${context.actor}`,
+              `**Run:** ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
+
+      - name: Comment PR on failure
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              '❌ **Backend CI FAILED**',
+              `**Branch:** ${context.payload.pull_request.head.ref}`,
+              `**Actor:** ${context.actor}`,
+              `**Run:** ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
