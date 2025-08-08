@@ -1,11 +1,9 @@
 name: Backend Tests (CI)
 
 on:
-  # Corre en cada push a ramas de sprint
   push:
     branches:
-      - "Sprint-*"
-  # Y cuando se abre/actualiza un PR hacia main
+      - "sprint-*"
   pull_request:
     branches: [ "main" ]
 
@@ -27,12 +25,13 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: ${{ env.DB_USER }}
-          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
-          POSTGRES_DB: ${{ env.DB_NAME }}
-        ports: [ "5432:5432" ]
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elliesdb_test
+        ports:
+          - "5432:5432"
         options: >-
-          --health-cmd="pg_isready -U ${{ env.DB_USER }} -d ${{ env.DB_NAME }}"
+          --health-cmd="pg_isready -U postgres -d elliesdb_test"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=30
@@ -60,13 +59,11 @@ jobs:
             echo "⏳ waiting for db..."; sleep 2;
           done
 
-      # Carga de esquema idéntica a como lo ejecutas en local
       - name: Bootstrap DB schema
         run: |
           psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/01_schema.sql
           psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/02_normalization.sql
           psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/03_indexes.sql
-          # Auditoría opcional: si falla, no rompe el pipeline
           psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/04_audit.sql || true
 
       - name: Run tests with coverage
@@ -80,7 +77,6 @@ jobs:
           path: .coverage
 
       # --------- Notificaciones nativas (comentario en PR) ----------
-
       - name: Comment PR on success
         if: ${{ success() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
