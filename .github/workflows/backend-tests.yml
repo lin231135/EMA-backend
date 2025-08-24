@@ -3,10 +3,10 @@ name: Backend Tests (CI)
 on:
   push:
     branches:
-      - "Sprint*"     # <- cubre Sprint2, Sprint-2, SprintBackend, etc.
+      - "Sprint*"     # Sprint2, Sprint-2, etc.
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:   # <- puedes ejecutarlo manualmente desde Actions
+  workflow_dispatch:
 
 env:
   NODE_ENV: test
@@ -21,6 +21,11 @@ jobs:
   test:
     name: Bun tests (Postgres service)
     runs-on: ubuntu-latest
+
+    # Permisos para poder comentar en PR/commits
+    permissions:
+      contents: write
+      pull-requests: write
 
     services:
       postgres:
@@ -63,9 +68,9 @@ jobs:
       - name: Bootstrap DB schema
         run: |
           psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/01_schema.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/02_normalization.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/03_indexes.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/04_audit.sql || true
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/02_normalization.sql
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/03_indexes.sql
+          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/04_audit.sql || true
 
       - name: Run tests with coverage
         run: bun test --coverage
@@ -75,7 +80,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
-          path: .coverage
+          # Bun crea 'coverage' (no '.coverage')
+          path: coverage
 
       # --------- Notificaciones nativas ----------
 
@@ -119,7 +125,7 @@ jobs:
               body
             });
 
-      # Comentario en COMMIT cuando es push (éxito)
+      # Comentario en COMMIT (push) éxito
       - name: Comment commit on success (push)
         if: ${{ success() && github.event_name == 'push' }}
         uses: actions/github-script@v7
@@ -139,7 +145,7 @@ jobs:
               body
             });
 
-      # Comentario en COMMIT cuando es push (fallo)
+      # Comentario en COMMIT (push) fallo
       - name: Comment commit on failure (push)
         if: ${{ failure() && github.event_name == 'push' }}
         uses: actions/github-script@v7
