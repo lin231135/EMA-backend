@@ -3,7 +3,7 @@ name: Backend Tests (CI)
 on:
   push:
     branches:
-      - "sprint-*"
+      - "Sprint-*"
   pull_request:
     branches: [ "main" ]
 
