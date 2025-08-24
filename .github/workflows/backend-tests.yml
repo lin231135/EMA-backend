@@ -22,7 +22,7 @@ jobs:
     name: Bun tests (Postgres service)
     runs-on: ubuntu-latest
 
-    # Permisos para poder comentar en PR/commits
+    # Permisos para comentar en PR/commits (si aplica)
     permissions:
       contents: write
       pull-requests: write
@@ -67,10 +67,13 @@ jobs:
 
       - name: Bootstrap DB schema
         run: |
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f src/db/01_schema.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/02_normalization.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/03_indexes.sql
-          psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST@$DB_PORT/$DB_NAME" -f src/db/04_audit.sql || true
+          set -e
+          PSQL_URL="postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME"
+          psql "$PSQL_URL" -f src/db/01_schema.sql
+          psql "$PSQL_URL" -f src/db/02_normalization.sql
+          psql "$PSQL_URL" -f src/db/03_indexes.sql
+          # 04_audit puede no ser crítico en tests -> no fallar si algo menor
+          psql "$PSQL_URL" -f src/db/04_audit.sql || true
 
       - name: Run tests with coverage
         run: bun test --coverage
@@ -80,8 +83,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
-          # Bun crea 'coverage' (no '.coverage')
-          path: coverage
+          # Sube si existe cualquiera de las rutas comunes
+          path: |
+            coverage
+            coverage/**/*
+            .coverage
+            .coverage/**/*
 
       # --------- Notificaciones nativas ----------
 
