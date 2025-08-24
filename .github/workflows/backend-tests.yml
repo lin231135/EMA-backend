@@ -3,9 +3,10 @@ name: Backend Tests (CI)
 on:
   push:
     branches:
-      - "Sprint-*"
+      - "Sprint*"     # <- cubre Sprint2, Sprint-2, SprintBackend, etc.
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:   # <- puedes ejecutarlo manualmente desde Actions
 
 env:
   NODE_ENV: test
@@ -76,7 +77,9 @@ jobs:
           name: coverage-backend
           path: .coverage
 
-      # --------- Notificaciones nativas (comentario en PR) ----------
+      # --------- Notificaciones nativas ----------
+
+      # Comentario en PR (éxito)
       - name: Comment PR on success
         if: ${{ success() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
@@ -96,6 +99,7 @@ jobs:
               body
             });
 
+      # Comentario en PR (fallo)
       - name: Comment PR on failure
         if: ${{ failure() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
@@ -112,5 +116,45 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
+              body
+            });
+
+      # Comentario en COMMIT cuando es push (éxito)
+      - name: Comment commit on success (push)
+        if: ${{ success() && github.event_name == 'push' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              '✅ **Backend CI OK**',
+              `**Branch:** ${context.ref}`,
+              `**Actor:** ${context.actor}`,
+              `**Run:** ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            ].join('\n');
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body
+            });
+
+      # Comentario en COMMIT cuando es push (fallo)
+      - name: Comment commit on failure (push)
+        if: ${{ failure() && github.event_name == 'push' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = [
+              '❌ **Backend CI FAILED**',
+              `**Branch:** ${context.ref}`,
+              `**Actor:** ${context.actor}`,
+              `**Run:** ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            ].join('\n');
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
               body
             });
