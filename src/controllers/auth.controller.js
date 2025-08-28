@@ -60,14 +60,16 @@ export const login = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  const { name, last_name, phone, email, password, role, description } = req.body;
+  const { name, last_name, prefix, phone, email, password, confirmPassword, role } = req.body;
 
-  if (!name || !last_name || !phone || !email || !password || !role) {
+  // Validación de campos obligatorios
+  if (!name || !last_name || !prefix || !phone || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ message: 'Todos los campos son obligatorios' });
   }
 
-  if (!VALID_ROLES.includes(role)) {
-    return res.status(400).json({ message: `Rol inválido. Usa: ${VALID_ROLES.join(', ')}` });
+  // Validación de contraseña y confirmación
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Las contraseñas no coinciden' });
   }
 
   try {
@@ -79,14 +81,15 @@ export const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Si el rol no es maestro, ignoramos description
-    const descValue = role === 'maestro' ? description ?? null : null;
+    // Concatenar prefijo y teléfono
+    const fullPhone = `${prefix}${phone}`;
 
+    // Insertar usuario
     const insert = await db.query(
-      `INSERT INTO "User"(name, last_name, phone, email, password, role, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, name, last_name, email, phone, role, description, is_active`,
-      [name, last_name, phone, email, hashedPassword, role, descValue]
+      `INSERT INTO "User"(name, last_name, phone, email, password, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, last_name, phone, email, role`,
+      [name, last_name, fullPhone, email, hashedPassword, role]
     );
 
     const newUser = insert.rows[0];
