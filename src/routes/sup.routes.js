@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDashboard } from '../controllers/sup.controller.js';
+import { getDashboard } from '../controllers/sup/sup.controller.js';
 import { getTrialRequest, updateTrialRequest, deleteTrialRequest } from '../controllers/trial.request.controller.js';
 import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';

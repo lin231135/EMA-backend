@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDashboard } from '../controllers/admin.controller.js';
+import { getDashboard } from '../controllers/admin/admin.controller.js';
 import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
