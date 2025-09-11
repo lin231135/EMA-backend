@@ -4,6 +4,14 @@ import { addPayment, getPayments, getPayment, updatePayment, deletePayment } fro
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
 import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
+import {
+  getRevenueReport,
+  getBookingsReport,
+  getTeachersPerformanceReport,
+  getStudentsActivityReport,
+  getCoursesPopularityReport,
+  getPendingPaymentsReport
+} from '../controllers/admin/reports.controller.js';
 
 const router = Router();
 
@@ -31,6 +39,14 @@ router.delete('/books/:id', deleteBook);
 router.get('/profile', getProfileInfo);
 router.put('/profile', updateProfileInfo);
 router.put('/profile/address', updateAddress);
+
+/* Endpoints de reportes */
+router.get('/reports/revenue', getRevenueReport);
+router.get('/reports/bookings', getBookingsReport);
+router.get('/reports/teachers-performance', getTeachersPerformanceReport);
+router.get('/reports/students-activity', getStudentsActivityReport);
+router.get('/reports/courses-popularity', getCoursesPopularityReport);
+router.get('/reports/pending-payments', getPendingPaymentsReport);
 
 export default router;
 
