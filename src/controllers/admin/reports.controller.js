@@ -1,6 +1,5 @@
 import db from '../../db/connection.js';
 
-
 // Reporte de ingresos por período
 export const getRevenueReport = async (req, res) => {
   try {

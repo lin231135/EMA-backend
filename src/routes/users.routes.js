@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken } from '../middlewares/auth.js';
-import { updateUser, setActive } from '../controllers/user.controller.js';
+import { updateUser, setActive } from '../controllers/users.controller.js';
 
 const router = Router();
 

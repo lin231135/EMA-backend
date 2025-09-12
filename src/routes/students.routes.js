@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../controllers/student/student.controller.js';
 import { getCalendar, getClassFeedback } from '../controllers/schedule.controller.js';
-import { getHistoryPayments, getHistoryPayment } from '../controllers/payment.controller.js';
+import { getPayments, getPayment } from '../controllers/payment.controller.js';
 import { getBooks, getBook } from '../controllers/book.controller.js';
 import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 
@@ -18,8 +18,8 @@ router.get('/calendar', getCalendar);
 router.get('/calendar/bookings/:bookingId/feedback', getClassFeedback);
 
 /* Endpoints de Payments */
-router.get('/payments', getHistoryPayments);
-router.get('/payments/:id', getHistoryPayment);
+router.get('/payments', getPayments);
+router.get('/payments/:id', getPayment);
 
 /* Endpoints de Book Catalog */
 router.get('/books', getBooks);
