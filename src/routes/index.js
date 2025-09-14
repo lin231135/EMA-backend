@@ -7,6 +7,7 @@ import parentRoutes from './parents.routes.js';
 import teacherRoutes from './teachers.routes.js';
 import adminRoutes from './admins.routes.js';
 import supRoutes from './sup.routes.js';
+import notificationRoutes from './notifications.routes.js';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use('/parents', parentRoutes)  // /api/parents/*
 router.use('/teachers', teacherRoutes)  // /api/teachers/*
 router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
+router.use('/notifications', notificationRoutes)  // /api/notifications/*
 
 
 export default router;
