@@ -599,4 +599,23 @@ INSERT INTO Payment_item (payment_id, booking_id, unit_cost, subtotal) VALUES
 (99, 43, 790.00, 790.00),
 (100, 44, 370.00, 370.00);
 
+-- Plantillas por defecto
+INSERT INTO notification_templates (type, channel, title, template) VALUES
+('class_reminder', 'email', 
+ 'Recordatorio de clase - {{course_name}}',
+ 'Hola {{parent_name}},\n\nEste es un recordatorio de que {{student_name}} tiene una clase de {{course_name}} programada para:\n\n📅 Fecha: {{class_date}}\n🕐 Hora: {{class_time}}\n👨‍🏫 Maestro: {{teacher_name}}\n🏠 Modalidad: {{modality}}\n\n¡Nos vemos en clase!\n\nEllie''s Music Academy'),
+ 
+('class_reminder', 'sms',
+ 'Recordatorio EMA',
+ 'Hola {{parent_name}}! Recordatorio: {{student_name}} tiene clase de {{course_name}} el {{class_date}} a las {{class_time}} con {{teacher_name}}. Modalidad: {{modality}}.'),
+ 
+('class_cancellation', 'email',
+ 'Clase Cancelada - {{course_name}}',
+ 'Hola {{parent_name}},\n\nLamentamos informarte que la clase de {{course_name}} de {{student_name}} programada para el {{class_date}} a las {{class_time}} ha sido cancelada.\n\n{{cancellation_reason}}\n\nNos pondremos en contacto contigo para reprogramar la clase.\n\nEllie''s Music Academy'),
+ 
+('payment_reminder', 'email',
+ 'Recordatorio de Pago - EMA',
+ 'Hola {{parent_name}},\n\nEste es un recordatorio de que tienes un pago pendiente por ${{amount}} correspondiente a las clases de {{student_name}}.\n\nPor favor realiza el pago a la brevedad para mantener activas las clases.\n\nGracias,\nEllie''s Music Academy')
+ON CONFLICT (type, channel) DO NOTHING;
+
 COMMIT;

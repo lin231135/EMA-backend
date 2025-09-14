@@ -21,6 +21,15 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstate') THEN
     CREATE TYPE paymentstate AS ENUM ('pendiente', 'solvente', 'cancelado');
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
+    CREATE TYPE notification_type AS ENUM ('class_reminder', 'class_cancellation', 'payment_reminder', 'class_feedback');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_status') THEN
+    CREATE TYPE notification_status AS ENUM ('pending', 'sent', 'failed', 'read');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_channel') THEN
+    CREATE TYPE notification_channel AS ENUM ('email', 'sms', 'push', 'in_app');
+  END IF;
 END $$;
 
 -- ======================== TABLAS ============================================
@@ -125,6 +134,51 @@ CREATE TABLE IF NOT EXISTS Payment_item (
   booking_id  INT NOT NULL REFERENCES Booking(id) ON DELETE RESTRICT,
   unit_cost   NUMERIC(10,2),
   subtotal    NUMERIC(10,2)
+);
+
+-- Configuración de notificaciones por usuario
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id              SERIAL PRIMARY KEY,
+  user_id         INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  class_reminder  BOOLEAN NOT NULL DEFAULT TRUE,
+  reminder_time   INTEGER NOT NULL DEFAULT 60, -- minutos antes de la clase
+  email_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+  sms_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
+  push_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Notificaciones
+CREATE TABLE IF NOT EXISTS notifications (
+  id              SERIAL PRIMARY KEY,
+  user_id         INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  booking_id      INT REFERENCES Booking(id) ON DELETE CASCADE,
+  schedule_id     INT REFERENCES Schedule(id) ON DELETE CASCADE,
+  type            notification_type NOT NULL,
+  channel         notification_channel NOT NULL,
+  title           VARCHAR(255) NOT NULL,
+  message         TEXT NOT NULL,
+  status          notification_status NOT NULL DEFAULT 'pending',
+  scheduled_for   TIMESTAMPTZ NOT NULL,
+  sent_at         TIMESTAMPTZ,
+  error_message   TEXT,
+  metadata        JSONB, -- datos adicionales como template_vars
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Plantillas de notificaciones
+CREATE TABLE IF NOT EXISTS notification_templates (
+  id          SERIAL PRIMARY KEY,
+  type        notification_type NOT NULL,
+  channel     notification_channel NOT NULL,
+  title       VARCHAR(255) NOT NULL,
+  template    TEXT NOT NULL, -- template con variables como {{student_name}}, {{class_time}}
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(type, channel)
 );
 
 COMMIT;
