@@ -8,6 +8,7 @@ import teacherRoutes from './teachers.routes.js';
 import adminRoutes from './admins.routes.js';
 import supRoutes from './sup.routes.js';
 import notificationRoutes from './notifications.routes.js';
+import contact from './contact.routes.js';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use('/teachers', teacherRoutes)  // /api/teachers/*
 router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/notifications', notificationRoutes)  // /api/notifications/*
+router.use('/contact', contact)  // /api/contact/*
 
 
 export default router;
