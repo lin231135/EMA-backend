@@ -8,15 +8,20 @@ dotenv.config();
 
 const app = express();
 
-app.set("trust proxy", true);
+// Evita errores de rate-limit con IP indefinida, sin ser permisivo
+app.set("trust proxy", "loopback"); // desarrollo/docker local
+// Producción detrás de 1 proxy real: app.set("trust proxy", 1);
 
 app.use(cors());
 app.use(express.json());
 
+// Monta todas las rutas bajo /api
 app.use("/api", router);
 
+// Healthcheck
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
+// Inicialización opcional de notificaciones (si existe tu servicio)
 (async () => {
   try {
     const { default: notificationService } = await import(

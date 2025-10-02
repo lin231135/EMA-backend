@@ -10,7 +10,7 @@ const limiter = rateLimit({
   max: 30, // 30 envíos por IP / 15min
 });
 
-router.post("/", limiter, postContact);
+router.post("/contact", limiter, postContact);
 
 
 export default router;
