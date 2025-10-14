@@ -2,21 +2,33 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    image: oven/bun:1.1.12
     container_name: ema-backend
-    ports:
-      - "5000:5000"
+    working_dir: /app
     volumes:
       - .:/app
+    ports:
+      - "5000:5000"
     depends_on:
       - db
     environment:
+      - NODE_ENV=production
       - PORT=5000
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=elliesdb
       - DB_HOST=db
       - DB_PORT=5432
+      - JWT_SECRET=PruebaSuperSecreta
+    command: sh -c "bun install && bun index.js"
+
+  backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ema-backend-test
+    volumes:
+      - .:/app
 
   db:
     image: postgres:16
