@@ -20,7 +20,7 @@ BEGIN
     CREATE TYPE bookingstatus AS ENUM ('programada', 'cancelada', 'completada');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentmethod') THEN
-    CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia');
+    CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia', 'deposito');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstate') THEN
     CREATE TYPE paymentstate AS ENUM ('pendiente', 'en revision', 'solvente', 'rechazado', 'cancelado');
