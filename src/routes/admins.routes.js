@@ -12,11 +12,15 @@ import {
   getCoursesPopularityReport,
   getPendingPaymentsReport
 } from '../controllers/admin/reports.controller.js';
+import studentsRoutes from './admin/students.routes.js';
 
 const router = Router();
 
 /* Endpoints de Dashboard */
 router.get('/dashboard', getDashboard);
+
+/* Endpoints de gestión de estudiantes (Students CRUD) */
+router.use('/students', studentsRoutes);
 
 /* Endpoints de Payments CRUD*/
 router.post('/payments', addPayment);
