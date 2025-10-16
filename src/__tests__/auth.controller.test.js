@@ -1,6 +1,6 @@
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
-import db from '../db/connection.js';
+import pool from '../db/connection.js';
 import app from './helpers/testApp.js';
 import { setupDB, truncateAll } from './helpers/setupTestDB.js';
 
@@ -33,7 +33,7 @@ test('register crea usuario padre', async () => {
 
 test('login con credenciales válidas devuelve token', async () => {
   const hash = await bcrypt.hash(TEST_PASS, 10);
-  await db.query(`
+  await pool.query(`
     INSERT INTO "User"(name,last_name,email,phone,password,role,is_active)
     VALUES ('John','Doe',$1,'+502123',$2,'padre',true)
   `, [TEST_EMAIL, hash]);
@@ -48,7 +48,7 @@ test('login con credenciales válidas devuelve token', async () => {
 
 test('update-password cambia contraseña con current válida', async () => {
   const hash = await bcrypt.hash(TEST_PASS, 10);
-  const inserted = await db.query(`
+  const inserted = await pool.query(`
     INSERT INTO "User"(name,last_name,email,phone,password,role,is_active)
     VALUES ('Jane','Doe','jane@ema.test','+502000',$1,'padre',true)
     RETURNING id

@@ -1,12 +1,12 @@
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
-import db from '../db/connection.js';
+import pool from '../db/connection.js';
 import app from './helpers/testApp.js';
 import { setupDB, truncateAll } from './helpers/setupTestDB.js';
 
 async function seedUser({ email, password, role = 'padre', is_active = true, description = null, name='User', last='Test' }) {
   const hash = await bcrypt.hash(password, 10);
-  const res = await db.query(`
+  const res = await pool.query(`
     INSERT INTO "User"(name,last_name,email,phone,password,role,is_active,description)
     VALUES ($1,$2,$3,'+502000',$4,$5,$6,$7)
     RETURNING id
