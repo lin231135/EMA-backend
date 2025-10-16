@@ -1,6 +1,6 @@
-// src/routes/contact.routes.js
+// src/routes/join.team.routes.js
 import { Router } from "express";
-import { postContact } from "../controllers/contact.controller.js";
+import { postJoinTeamEmail } from "../controllers/join.team.controller.js";
 import rateLimit from "express-rate-limit";
 
 const router = Router();
@@ -10,7 +10,7 @@ const limiter = rateLimit({
   max: 30, // 30 envíos por IP / 15min
 });
 
-router.post("/", limiter, postContact);
+router.post("/", limiter, postJoinTeamEmail);
 
 
 export default router;

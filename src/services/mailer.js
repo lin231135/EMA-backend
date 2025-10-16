@@ -79,6 +79,41 @@ export async function sendContactMail({ name, email, phone, subject, message }) 
   return info;
 }
 
+export async function sendJoinTeamMail({ name, email, subject, message }) {
+  const transporter = getTransporter();
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222">
+      <h2 style="color:#0e7490;margin:0 0 8px">Nuevo mensaje de contacto</h2>
+      <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+      <p><strong>Asunto:</strong> ${escapeHtml(subject)}</p>
+      <hr/>
+      <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
+    </div>
+  `;
+
+  const text = [
+    `Nuevo mensaje de join our team`,
+    `Nombre: ${name}`,
+    `Email: ${email}`,
+    `Asunto: ${subject}`,
+    ``,
+    message,
+  ].join("\n");
+
+  const info = await transporter.sendMail({
+    from: MAIL_FROM,
+    to: MAIL_TO,
+    replyTo: email || MAIL_FROM,
+    subject: `[EMA Join our team] ${subject}`,
+    text,
+    html,
+  });
+
+  return info;
+}
+
 function escapeHtml(str = "") {
   return String(str)
     .replaceAll("&", "&amp;")

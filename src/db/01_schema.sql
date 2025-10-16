@@ -1,6 +1,10 @@
--- ============================================================================
--- 01_schema.sql  |  Ellie's Music Academy - FULL schema (base)
--- ============================================================================
+-- ==========================================================
+-- SCRIPT DE CREACIÓN DE BASE DE DATOS - SISTEMA DE CLASES
+-- ==========================================================
+-- Incluye definición de ENUMs, tablas y llaves foráneas.
+-- Diseñado para PostgreSQL.
+-- ==========================================================
+
 BEGIN;
 
 -- ======================== ENUMS =============================================
@@ -19,7 +23,7 @@ BEGIN
     CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstate') THEN
-    CREATE TYPE paymentstate AS ENUM ('pendiente', 'solvente', 'cancelado');
+    CREATE TYPE paymentstate AS ENUM ('pendiente', 'en revision', 'solvente', 'rechazado', 'cancelado');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
     CREATE TYPE notification_type AS ENUM ('class_reminder', 'class_cancellation', 'payment_reminder', 'class_feedback');
@@ -32,153 +36,177 @@ BEGIN
   END IF;
 END $$;
 
--- ======================== TABLAS ============================================
+-- ======================== TABLAS PRINCIPALES ================================
 
--- Usuarios
+-- Tabla de usuarios del sistema
 CREATE TABLE IF NOT EXISTS "User" (
-  id           SERIAL PRIMARY KEY,
-  name         VARCHAR(255) NOT NULL,
-  last_name    VARCHAR(255) NOT NULL,
-  email        VARCHAR(255) NOT NULL UNIQUE,
-  phone        VARCHAR(20)  NOT NULL,
-  password     VARCHAR(255) NOT NULL,
-  role         role NOT NULL,                   -- 'admin' | 'maestro' | 'padre'
-  description  TEXT,                            -- solo maestros
-  is_active    BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  phone VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role role NOT NULL,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Direcciones
-CREATE TABLE IF NOT EXISTS Address (
-  id            SERIAL PRIMARY KEY,
-  user_id       INT REFERENCES "User"(id) ON DELETE CASCADE,
-  address_line  VARCHAR(255),
-  city          VARCHAR(100),
-  zone          VARCHAR(50),
-  is_primary    BOOLEAN NOT NULL DEFAULT FALSE
-);
-
--- Hijos
+-- Tabla de hijos asociados a padres
 CREATE TABLE IF NOT EXISTS Kid (
-  id          SERIAL PRIMARY KEY,
-  parent_id   INT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT,
-  name        VARCHAR(255) NOT NULL,
-  birth_date  DATE NOT NULL,
-  is_solvent  BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  parent_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  birth_date VARCHAR(255) NOT NULL,
+  is_solvent BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Cursos
+-- Tabla de direcciones
+CREATE TABLE IF NOT EXISTS Address (
+  id SERIAL PRIMARY KEY,
+  city VARCHAR(100) NOT NULL,
+  apartment VARCHAR(100),
+  street_avenue VARCHAR(100) NOT NULL,
+  zone VARCHAR(50) NOT NULL,
+  house_number VARCHAR(50) NOT NULL,
+  neighborhood VARCHAR(50) NOT NULL,
+  municipality VARCHAR(100) NOT NULL,
+  is_primary BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Relación muchos a muchos entre usuarios y direcciones
+CREATE TABLE IF NOT EXISTS User_Address (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  address_id INT NOT NULL REFERENCES Address(id) ON DELETE CASCADE
+);
+
+-- Relación muchos a muchos entre hijos y direcciones
+CREATE TABLE IF NOT EXISTS Kid_Address (
+  id SERIAL PRIMARY KEY,
+  kid_id INT NOT NULL REFERENCES Kid(id) ON DELETE CASCADE,
+  address_id INT NOT NULL REFERENCES Address(id) ON DELETE CASCADE
+);
+
+-- Tabla de cursos
 CREATE TABLE IF NOT EXISTS Course (
-  id          SERIAL PRIMARY KEY,
-  name        VARCHAR(255) NOT NULL UNIQUE,
-  teacher_id  INT REFERENCES "User"(id) ON DELETE RESTRICT,
-  modality    modality NOT NULL DEFAULT 'academia',
-  capacity    INT NOT NULL DEFAULT 1,
-  cost        NUMERIC(10,2) NOT NULL,
-  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT chk_course_capacity CHECK (capacity BETWEEN 1 AND 5)
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  modality modality NOT NULL,
+  capacity INT NOT NULL,
+  cost DECIMAL(10,2) NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Horarios
+-- Relación entre maestro y curso
+CREATE TABLE IF NOT EXISTS Teacher_course (
+  id SERIAL PRIMARY KEY,
+  teacher_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  course_id INT REFERENCES Course(id) ON DELETE SET NULL
+);
+
+-- Horarios de clases
 CREATE TABLE IF NOT EXISTS Schedule (
-  id             SERIAL PRIMARY KEY,
-  course_id      INT NOT NULL REFERENCES Course(id) ON DELETE CASCADE,
-  teacher_id     INT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT,
-  schedule_date  DATE NOT NULL,
-  start_time     TIME NOT NULL,
-  end_time       TIME NOT NULL,
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT chk_schedule_time_order CHECK (end_time > start_time)
+  id SERIAL PRIMARY KEY,
+  course_id INT NOT NULL REFERENCES Course(id) ON DELETE CASCADE,
+  teacher_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  schedule_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Reservas
+-- Reservas o inscripciones de clases
 CREATE TABLE IF NOT EXISTS Booking (
-  id           SERIAL PRIMARY KEY,
-  kid_id       INT NOT NULL REFERENCES Kid(id) ON DELETE RESTRICT,
-  course_id    INT NOT NULL REFERENCES Course(id) ON DELETE RESTRICT,
-  schedule_id  INT NOT NULL REFERENCES Schedule(id) ON DELETE RESTRICT,
-  teacher_id   INT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT,
-  modality     modality NOT NULL,
-  status       bookingstatus NOT NULL DEFAULT 'programada',
-  booked_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  note         VARCHAR(255)
+  id SERIAL PRIMARY KEY,
+  kid_id INT NOT NULL REFERENCES Kid(id) ON DELETE CASCADE,
+  course_id INT NOT NULL REFERENCES Course(id) ON DELETE CASCADE,
+  schedule_id INT NOT NULL REFERENCES Schedule(id) ON DELETE CASCADE,
+  teacher_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  modality modality NOT NULL,
+  status bookingstatus NOT NULL,
+  booked_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  note VARCHAR(255)
 );
 
--- Feedback
-CREATE TABLE IF NOT EXISTS Feedback (
-  id          SERIAL PRIMARY KEY,
-  booking_id  INT NOT NULL REFERENCES Booking(id) ON DELETE CASCADE,
-  teacher_id  INT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT,
-  content     TEXT,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Tabla de libros disponibles
+CREATE TABLE IF NOT EXISTS Book (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  cost FLOAT NOT NULL,
+  stock INT NOT NULL,
+  img_url VARCHAR(255) NOT NULL
 );
 
--- Pagos
+-- Pagos realizados
 CREATE TABLE IF NOT EXISTS Payment (
-  id             SERIAL PRIMARY KEY,
-  payer_id       INT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT,
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
   payment_method paymentmethod NOT NULL,
-  total          NUMERIC(10,2) NOT NULL,
-  payment_date   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  state          paymentstate NOT NULL DEFAULT 'pendiente',
-  reference_pic  VARCHAR(255),
-  note           VARCHAR(255)
+  total DECIMAL(10,2) NOT NULL,
+  payment_date TIMESTAMP NOT NULL DEFAULT NOW(),
+  state paymentstate NOT NULL,
+  reference_pic VARCHAR(255),
+  note VARCHAR(255)
 );
 
--- Detalle de pago
+-- Ítems de pago (pueden ser clases o libros)
 CREATE TABLE IF NOT EXISTS Payment_item (
-  id          SERIAL PRIMARY KEY,
-  payment_id  INT NOT NULL REFERENCES Payment(id) ON DELETE CASCADE,
-  booking_id  INT NOT NULL REFERENCES Booking(id) ON DELETE RESTRICT,
-  unit_cost   NUMERIC(10,2),
-  subtotal    NUMERIC(10,2)
+  id SERIAL PRIMARY KEY,
+  payment_id INT NOT NULL REFERENCES Payment(id) ON DELETE CASCADE,
+  booking_id INT REFERENCES Booking(id) ON DELETE SET NULL,
+  book_id INT REFERENCES Book(id) ON DELETE SET NULL,
+  unit_cost DECIMAL(10,2) NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL
 );
 
--- Configuración de notificaciones por usuario
-CREATE TABLE IF NOT EXISTS notification_preferences (
-  id              SERIAL PRIMARY KEY,
-  user_id         INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-  class_reminder  BOOLEAN NOT NULL DEFAULT TRUE,
-  reminder_time   INTEGER NOT NULL DEFAULT 60, -- minutos antes de la clase
-  email_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
-  sms_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
-  push_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Retroalimentación de clases (feedback de maestros)
+CREATE TABLE IF NOT EXISTS Feedback (
+  id SERIAL PRIMARY KEY,
+  booking_id INT NOT NULL REFERENCES Booking(id) ON DELETE CASCADE,
+  teacher_id INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Notificaciones
-CREATE TABLE IF NOT EXISTS notifications (
-  id              SERIAL PRIMARY KEY,
-  user_id         INT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-  booking_id      INT REFERENCES Booking(id) ON DELETE CASCADE,
-  schedule_id     INT REFERENCES Schedule(id) ON DELETE CASCADE,
-  type            notification_type NOT NULL,
-  channel         notification_channel NOT NULL,
-  title           VARCHAR(255) NOT NULL,
-  message         TEXT NOT NULL,
-  status          notification_status NOT NULL DEFAULT 'pending',
-  scheduled_for   TIMESTAMPTZ NOT NULL,
-  sent_at         TIMESTAMPTZ,
-  error_message   TEXT,
-  metadata        JSONB, -- datos adicionales como template_vars
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Notas generales de los alumnos
+CREATE TABLE IF NOT EXISTS Notes (
+  id SERIAL PRIMARY KEY,
+  kid_id INT NOT NULL REFERENCES Kid(id) ON DELETE CASCADE,
+  note TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Plantillas de notificaciones
-CREATE TABLE IF NOT EXISTS notification_templates (
-  id          SERIAL PRIMARY KEY,
-  type        notification_type NOT NULL,
-  channel     notification_channel NOT NULL,
-  title       VARCHAR(255) NOT NULL,
-  template    TEXT NOT NULL, -- template con variables como {{student_name}}, {{class_time}}
-  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(type, channel)
+-- Tabla para almacenar usuarios de WhatsApp y sus preferencias
+CREATE TABLE IF NOT EXISTS whatsapp_users (
+  id SERIAL PRIMARY KEY,
+  phone_number VARCHAR(20) UNIQUE NOT NULL,
+  language VARCHAR(2) DEFAULT 'es' CHECK (language IN ('es', 'en')),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Tabla para registrar todas las interacciones
+CREATE TABLE IF NOT EXISTS whatsapp_interactions (
+  id SERIAL PRIMARY KEY,
+  phone_number VARCHAR(20) NOT NULL,
+  message_type VARCHAR(50) NOT NULL,
+  content TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (phone_number) REFERENCES whatsapp_users(phone_number) ON DELETE CASCADE
+);
+
+-- Índices para mejorar el rendimiento
+CREATE INDEX IF NOT EXISTS idx_whatsapp_users_phone ON whatsapp_users(phone_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_interactions_phone ON whatsapp_interactions(phone_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_interactions_created ON whatsapp_interactions(created_at DESC);
+
+-- Comentarios
+COMMENT ON TABLE whatsapp_users IS 'Usuarios que interactúan con el bot de WhatsApp';
+COMMENT ON TABLE whatsapp_interactions IS 'Historial de todas las interacciones con el bot';
+COMMENT ON COLUMN whatsapp_users.language IS 'Idioma preferido: es (español) o en (inglés)';
 
 COMMIT;

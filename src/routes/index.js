@@ -10,7 +10,7 @@ import supRoutes from './sup.routes.js';
 import notificationRoutes from './notifications.routes.js';
 import contact from './contact.routes.js';
 import parentsRoutes from "./parent/parents.routes.js";
-
+import joinTeam from './join.team.routes.js';
 
 const router = Router();
 
@@ -26,5 +26,6 @@ router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/notifications', notificationRoutes)  // /api/notifications/*
 router.use('/contact', contact)  // /api/contact/*
+router.use('/join-team', joinTeam)  // /api/join-team/* 
 
 export default router;
