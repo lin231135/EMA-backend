@@ -21,23 +21,4 @@ app.use("/api", router);
 // Healthcheck
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Inicialización opcional de notificaciones (si existe tu servicio)
-(async () => {
-  try {
-    const { default: notificationService } = await import(
-      "./services/notification.service.js"
-    );
-    await notificationService.init();
-    console.log("✅ Servicio de notificaciones inicializado correctamente");
-  } catch (error) {
-    console.warn(
-      "⚠️ No se pudo inicializar el servicio de notificaciones:",
-      error.message
-    );
-    console.log(
-      "📝 El servidor continuará funcionando sin notificaciones automáticas"
-    );
-  }
-})();
-
 export default app;

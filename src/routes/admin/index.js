@@ -3,6 +3,10 @@ import { getDashboard } from '../../controllers/admin/index.controller.js';
 import { getStudentsReport } from '../../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../../controllers/book.controller.js';
 import { getProfileInfo, updateProfileInfo, updateAddress } from '../../controllers/users.controller.js';
+import { getDashboard } from '../controllers/admin/admin.controller.js';
+import { getStudentsReport } from '../controllers/student.report.controller.js';
+import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
+import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 import {
   getRevenueReport,
   getBookingsReport,
@@ -46,6 +50,6 @@ router.get('/reports/bookings', getBookingsReport);
 router.get('/reports/teachers-performance', getTeachersPerformanceReport);
 router.get('/reports/students-activity', getStudentsActivityReport);
 router.get('/reports/courses-popularity', getCoursesPopularityReport);
-router.get('/reports/pending-payments', getPendingPaymentsReport);
+//router.get('/reports/pending-payments', getPendingPaymentsReport);
 
 export default router;

@@ -2,12 +2,11 @@ import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 import userRoutes from './users.routes.js';
 import courseRoutes from './courses.routes.js';
-import studentRoutes from './students.routes.js';
+import studentRoutes from './student/students.routes.js';
 import parentRoutes from './parents.routes.js';
 import teacherRoutes from './teachers.routes.js';
 import adminRoutes from './admin/index.js';  // ✅ Cambiado a estructura de carpeta
 import supRoutes from './sup.routes.js';
-import notificationRoutes from './notifications.routes.js';
 import contact from './contact.routes.js';
 import parentsRoutes from "./parent/parents.routes.js";
 import joinTeam from './join.team.routes.js';
@@ -24,7 +23,6 @@ router.use('/parents', parentsRoutes)  // /api/parents/* (children, profiles)
 router.use('/teachers', teacherRoutes)  // /api/teachers/*
 router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
-router.use('/notifications', notificationRoutes)  // /api/notifications/*
 router.use('/contact', contact)  // /api/contact/*
 router.use('/join-team', joinTeam)  // /api/join-team/* 
 

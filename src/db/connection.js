@@ -21,14 +21,14 @@ const connectWithRetry = async (retries = 5, interval = 2000) => {
   for (let i = 0; i < retries; i++) {
     try {
       await pool.query('SELECT NOW()');
-      console.log('✅ Conectado a PostgreSQL');
+      console.log('Conectado a PostgreSQL');
       return;
     } catch (err) {
-      console.log(`🔁 Reintentando conexión ${i + 1}/${retries}...`, err?.message || err);
+      console.log(`Reintentando conexión ${i + 1}/${retries}...`, err?.message || err);
       await new Promise(res => setTimeout(res, interval));
     }
   }
-  console.error('❌ No se pudo conectar a PostgreSQL después de varios intentos');
+  console.error('No se pudo conectar a PostgreSQL después de varios intentos');
 };
 
 connectWithRetry();

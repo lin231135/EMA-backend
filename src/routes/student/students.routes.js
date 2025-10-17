@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../controllers/student/student.controller.js';
-import { getCalendar, getClassFeedback } from '../controllers/schedule.controller.js';
-import { getPayments, getPayment } from '../controllers/payment.controller.js';
-import { getBooks, getBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
+import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../../controllers/student/student.controller.js';
+import { getCalendar, getClassFeedback } from '../../controllers/schedule.controller.js';
+import { getPendingPayments, createStudentPayment } from '../../controllers/student/studentPayment.controller.js';
+import { getBooks, getBook } from '../../controllers/book.controller.js';
+import { getProfileInfo, updateProfileInfo, updateAddress } from '../../controllers/users.controller.js';
+import { verifyToken /*, isStudent */ } from '../../middlewares/auth.js';
 
 const router = Router();
 
@@ -18,8 +19,8 @@ router.get('/calendar', getCalendar);
 router.get('/calendar/bookings/:bookingId/feedback', getClassFeedback);
 
 /* Endpoints de Payments */
-router.get('/payments', getPayments);
-router.get('/payments/:id', getPayment);
+router.get('/payments/pending', verifyToken, getPendingPayments);
+router.post('/payments', verifyToken, createStudentPayment);
 
 /* Endpoints de Book Catalog */
 router.get('/books', getBooks);
@@ -31,4 +32,3 @@ router.put('/profile', updateProfileInfo);
 router.put('/profile/address', updateAddress);
 
 export default router;
-

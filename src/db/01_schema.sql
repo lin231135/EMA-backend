@@ -20,7 +20,7 @@ BEGIN
     CREATE TYPE bookingstatus AS ENUM ('programada', 'cancelada', 'completada');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentmethod') THEN
-    CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia');
+    CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia', 'deposito');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstate') THEN
     CREATE TYPE paymentstate AS ENUM ('pendiente', 'en revision', 'aceptado', 'rechazado', 'cancelado');
@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS Kid (
   name VARCHAR(255) NOT NULL,
   birth_date VARCHAR(255) NOT NULL,
   is_solvent BOOLEAN DEFAULT FALSE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
