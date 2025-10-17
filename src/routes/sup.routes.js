@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getDashboard } from '../controllers/sup/sup.controller.js';
 import { getTrialRequests, getTrialRequest, updateTrialRequest, deleteTrialRequest } from '../controllers/trial.request.controller.js';
-import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
+//import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
 import { addUser, getUsers, getUser, updateUser, deleteUser } from '../controllers/users.controller.js';
@@ -17,12 +17,12 @@ router.get('/trial-requests/:id', getTrialRequest);
 router.put('/trial-requests/:id', updateTrialRequest);
 router.delete('/trial-requests/:id', deleteTrialRequest);
 
-/* Endpoints de Payments CRUD*/
+/* Endpoints de Payments CRUD
 router.post('/payments', addPayment);
 router.get('/payments', getPayments);
 router.get('/payments/:id', getPayment);
 router.put('/payments/:id', updatePayment);
-router.delete('/payments/:id', deletePayment);
+router.delete('/payments/:id', deletePayment);*/
 
 /* Endpoints de Books CRUD */
 router.post('/books', addBook);

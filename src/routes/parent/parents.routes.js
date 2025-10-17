@@ -1,35 +1,76 @@
 /**
  * Rutas para funcionalidades específicas de padres
- * Todas las rutas requieren autenticación mediante JWT
  * Base path: /api/parents
  */
-
-// Importación del enrutador de Express para definir rutas
 import { Router } from "express";
-
-// Middleware de autenticación para proteger las rutas
 import { verifyToken } from "../../middlewares/auth.js";
 
-// Importación de controladores para la gestión de perfiles de padres e hijos
+// Controladores para selección de perfiles (ya existentes)
 import {
-  getChildrenByParent,    // Obtiene la lista de hijos de un padre
-  getParentProfiles,      // Obtiene perfiles completos (padre + hijos)
+  getChildrenByParent,
+  getParentProfiles,
 } from "../../controllers/parent/selectProfile.controller.js";
 
-// Crear instancia del enrutador
+// Controladores de dashboard del padre
+import {
+  getChildrenForDashboard,
+  addNote,
+  getFeedback,
+  getTodayClasses,
+  getNextClasses,
+} from "../../controllers/parent/parent.controller.js";
+
 const router = Router();
 
+/* -------------------------------------------------------------------------- */
+/*                          Sección: Selección de perfil                      */
+/* -------------------------------------------------------------------------- */
 /**
  * GET /api/parents/children
- * Obtiene la lista de todos los hijos asociados al padre autenticado
+ * Devuelve todos los hijos asociados al padre logueado (para pantalla de selección de perfil)
  */
 router.get("/children", verifyToken, getChildrenByParent);
 
 /**
  * GET /api/parents/profiles
- * Obtiene los perfiles completos para la pantalla de selección
- * Retorna tanto el perfil del padre como los perfiles de sus hijos
+ * Devuelve los perfiles disponibles del padre autenticado
  */
 router.get("/profiles", verifyToken, getParentProfiles);
 
+/* -------------------------------------------------------------------------- */
+/*                       Sección: Dashboard de Padres                         */
+/* -------------------------------------------------------------------------- */
+/**
+ * GET /api/parents/dashboard/children
+ * Devuelve los hijos del padre autenticado (para mostrar en el dashboard)
+ */
+router.get("/dashboard/children", verifyToken, getChildrenForDashboard);
+
+/**
+ * GET /api/parents/dashboard/today-classes
+ * Devuelve las clases del día actual (solo para hijos del padre logueado)
+ */
+router.get("/dashboard/today-classes", verifyToken, getTodayClasses);
+
+/**
+ * GET /api/parents/dashboard/next-classes
+ * Devuelve las clases próximas (por defecto, 3 días siguientes)
+ */
+router.get("/dashboard/next-classes", verifyToken, getNextClasses);
+
+/**
+ * GET /api/parents/dashboard/feedback
+ * Devuelve la retroalimentación de los maestros (pendiente de implementar)
+ */
+router.get("/dashboard/feedback", verifyToken, getFeedback);
+
+/**
+ * POST /api/parents/dashboard/add-note
+ * Agrega una nota asociada a un hijo o clase (pendiente de implementar)
+ */
+router.post("/dashboard/add-note", verifyToken, addNote);
+
+/* -------------------------------------------------------------------------- */
+/*                              Exportación final                             */
+/* -------------------------------------------------------------------------- */
 export default router;
