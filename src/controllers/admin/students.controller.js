@@ -237,7 +237,7 @@ export const updateStudent = async (req, res) => {
 /**
  * Desactivar un estudiante (soft delete)
  * PATCH /api/admins/students/:id/deactivate
- * Nota: Asumimos que la tabla Kid tendrá el campo is_active en el futuro
+ * Marca is_active = FALSE, cancela reservas futuras y agrega nota
  */
 export const deactivateStudent = async (req, res) => {
   const client = await db.connect();
@@ -246,10 +246,11 @@ export const deactivateStudent = async (req, res) => {
     await client.query('BEGIN');
     
     const { id } = req.params;
+    const { reason } = req.body;
     
     // Verificar que el estudiante existe
     const studentCheck = await client.query(
-      'SELECT id, name FROM Kid WHERE id = $1',
+      'SELECT id, name, is_active FROM Kid WHERE id = $1',
       [id]
     );
     
@@ -258,11 +259,16 @@ export const deactivateStudent = async (req, res) => {
       return res.status(404).json({ error: 'Estudiante no encontrado' });
     }
     
-    // TODO: Descomentar cuando se agregue is_active a la tabla Kid
-    // await client.query(
-    //   'UPDATE Kid SET is_active = FALSE WHERE id = $1',
-    //   [id]
-    // );
+    if (!studentCheck.rows[0].is_active) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'El estudiante ya está desactivado' });
+    }
+    
+    // Desactivar el estudiante
+    await client.query(
+      'UPDATE Kid SET is_active = FALSE WHERE id = $1',
+      [id]
+    );
     
     // Cancelar todas las reservas futuras del estudiante
     const cancelResult = await client.query(
@@ -277,11 +283,25 @@ export const deactivateStudent = async (req, res) => {
       [id]
     );
     
+    // Agregar nota explicativa
+    const noteText = reason 
+      ? `Cuenta desactivada. Razón: ${reason}` 
+      : 'Cuenta desactivada. Desactivación administrativa';
+    
+    await client.query(
+      'INSERT INTO Notes (kid_id, note, created_at) VALUES ($1, $2, NOW())',
+      [id, noteText]
+    );
+    
     await client.query('COMMIT');
     
     res.status(200).json({
       message: 'Estudiante desactivado exitosamente',
-      student: studentCheck.rows[0],
+      student: {
+        id: studentCheck.rows[0].id,
+        name: studentCheck.rows[0].name,
+        is_active: false
+      },
       cancelled_bookings: cancelResult.rowCount
     });
     
