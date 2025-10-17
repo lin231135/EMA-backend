@@ -5,6 +5,7 @@ import {
   getStudent,
   updateStudent,
   deactivateStudent,
+  reactivateStudent,
   deleteStudent
 } from '../../controllers/admin/students.controller.js';
 import {
@@ -76,13 +77,27 @@ router.put(
  * @access  Admin
  * @param   {number} id - ID del estudiante
  * @body    {string} [reason] - Razón de la desactivación
- * @note    Esta acción marca al estudiante como no solvente, 
+ * @note    Esta acción marca is_active=FALSE, 
  *          cancela sus reservas futuras y agrega una nota explicativa
  */
 router.patch(
   '/:id/deactivate',
   validate(deactivateStudentSchema),
   deactivateStudent
+);
+
+/**
+ * @route   PATCH /api/admins/students/:id/reactivate
+ * @desc    Reactivar un estudiante previamente desactivado
+ * @access  Admin
+ * @param   {number} id - ID del estudiante
+ * @body    {string} [reason] - Razón de la reactivación
+ * @note    Esta acción marca is_active=TRUE y agrega una nota explicativa
+ */
+router.patch(
+  '/:id/reactivate',
+  validate(deactivateStudentSchema), // Usa el mismo schema (solo reason opcional)
+  reactivateStudent
 );
 
 /**
