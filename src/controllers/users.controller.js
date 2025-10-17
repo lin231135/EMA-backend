@@ -328,9 +328,20 @@ export const addUser = async (req, res) => {
 // Get all users
 export const getUsers = async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT id, name, last_name, email, phone, role, description, is_active FROM "User"`
-    );
+    const { role } = req.query;
+    
+    let query = `SELECT id, name, last_name, email, phone, role, description, is_active FROM "User"`;
+    const params = [];
+    
+    // Filtrar por rol si se proporciona
+    if (role) {
+      query += ` WHERE role = $1`;
+      params.push(role);
+    }
+    
+    query += ` ORDER BY created_at DESC`;
+    
+    const result = await pool.query(query, params);
     return res.status(200).json({ users: result.rows.map(mapUser) });
   } catch (error) {
     console.error('getUsers error', error);

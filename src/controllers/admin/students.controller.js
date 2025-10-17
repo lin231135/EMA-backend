@@ -94,6 +94,7 @@ export const getStudents = async (req, res) => {
         k.id,
         'Estudiante' as role,
         k.name,
+        k.is_active,
         k.created_at
        FROM Kid k
        ORDER BY k.created_at DESC`
@@ -111,29 +112,112 @@ export const getStudents = async (req, res) => {
 };
 
 /**
- * Obtener un estudiante por ID
+ * Obtener un estudiante por ID con información completa
  * GET /api/admins/students/:id
  */
 export const getStudent = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await db.query(
+    // Obtener información básica del estudiante
+    const studentResult = await db.query(
       `SELECT 
         k.id,
-        'Estudiante' as role,
+        k.parent_id,
         k.name,
-        k.created_at
+        k.birth_date,
+        k.is_solvent,
+        k.is_active,
+        k.created_at,
+        u.name as parent_name,
+        u.email as parent_email,
+        u.phone as parent_phone
        FROM Kid k
+       LEFT JOIN "User" u ON k.parent_id = u.id
        WHERE k.id = $1`,
       [id]
     );
     
-    if (result.rows.length === 0) {
+    if (studentResult.rows.length === 0) {
       return res.status(404).json({ error: 'Estudiante no encontrado' });
     }
     
-    res.status(200).json({ student: result.rows[0] });
+    const student = studentResult.rows[0];
+    
+    // Obtener direcciones del estudiante
+    const addressesResult = await db.query(
+      `SELECT 
+        a.id,
+        a.city,
+        a.apartment,
+        a.street_avenue,
+        a.zone,
+        a.house_number,
+        a.neighborhood,
+        a.municipality,
+        a.is_primary
+       FROM Address a
+       INNER JOIN Kid_Address ka ON a.id = ka.address_id
+       WHERE ka.kid_id = $1`,
+      [id]
+    );
+    
+    // Obtener reservas del estudiante
+    const bookingsResult = await db.query(
+      `SELECT 
+        b.id,
+        b.status,
+        b.modality,
+        s.schedule_date,
+        s.start_time,
+        s.end_time,
+        c.name as course_name,
+        c.modality as course_modality,
+        t.name as teacher_name
+       FROM Booking b
+       INNER JOIN Schedule s ON b.schedule_id = s.id
+       INNER JOIN Course c ON b.course_id = c.id
+       LEFT JOIN "User" t ON b.teacher_id = t.id
+       WHERE b.kid_id = $1
+       ORDER BY s.schedule_date DESC, s.start_time DESC
+       LIMIT 10`,
+      [id]
+    );
+    
+    // Obtener notas del estudiante
+    const notesResult = await db.query(
+      `SELECT 
+        id,
+        note,
+        created_at
+       FROM Notes
+       WHERE kid_id = $1
+       ORDER BY created_at DESC
+       LIMIT 5`,
+      [id]
+    );
+    
+    // Construir respuesta completa
+    const completeStudent = {
+      id: student.id,
+      role: 'Estudiante',
+      name: student.name,
+      birth_date: student.birth_date,
+      is_solvent: student.is_solvent,
+      is_active: student.is_active,
+      created_at: student.created_at,
+      parent: student.parent_id ? {
+        id: student.parent_id,
+        name: student.parent_name,
+        email: student.parent_email,
+        phone: student.parent_phone
+      } : null,
+      addresses: addressesResult.rows,
+      bookings: bookingsResult.rows,
+      notes: notesResult.rows
+    };
+    
+    res.status(200).json({ student: completeStudent });
     
   } catch (error) {
     console.error('Error al obtener estudiante:', error);

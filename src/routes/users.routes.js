@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { verifyToken } from '../middlewares/auth.js';
-import { updateUser, setActive } from '../controllers/users.controller.js';
+import { updateUser, setActive, getUsers } from '../controllers/users.controller.js';
 import { getProfileInfo, updateProfileInfo, updateAddressById } from '../controllers/users.controller.js';
 
 const router = Router();
+
+// Listar usuarios (con filtro opcional por rol)
+router.get('/', getUsers); // /api/users?role=padre
 
 router.patch('/:id', verifyToken, updateUser);
 router.patch('/:id/activate', verifyToken, setActive(true));
