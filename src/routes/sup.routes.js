@@ -4,7 +4,7 @@ import { getTrialRequests, getTrialRequest, updateTrialRequest, deleteTrialReque
 import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress, addUser, getUsers, getUser, updateUser, deleteUser } from '../controllers/users.controller.js';
+import { addUser, getUsers, getUser, updateUser, deleteUser } from '../controllers/users.controller.js';
 
 const router = Router();
 
@@ -41,10 +41,6 @@ router.get('/users/:id', getUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 
-/* Endpoints de profile */
-router.get('/profile', getProfileInfo);
-router.put('/profile', updateProfileInfo);
-router.put('/profile/address', updateAddress);
 
 export default router;
 

@@ -11,7 +11,7 @@ BEGIN;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role') THEN
-    CREATE TYPE role AS ENUM ('admin', 'maestro', 'padre');
+    CREATE TYPE role AS ENUM ('admin', 'maestro', 'padre', 'estudiante');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'modality') THEN
     CREATE TYPE modality AS ENUM ('academia', 'domicilio');

@@ -3,7 +3,6 @@ import { getDashboard } from '../controllers/admin/admin.controller.js';
 import { addPayment, getPayments, getPayment, updatePayment, deletePayment } from '../controllers/payment.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 import {
   getRevenueReport,
   getBookingsReport,
@@ -38,11 +37,6 @@ router.get('/books', getBooks);
 router.get('/books/:id', getBook);
 router.put('/books/:id', updateBook);
 router.delete('/books/:id', deleteBook);
-
-/* Endpoints de profile */
-router.get('/profile', getProfileInfo);
-router.put('/profile', updateProfileInfo);
-router.put('/profile/address', updateAddress);
 
 /* Endpoints de reportes */
 router.get('/reports/revenue', getRevenueReport);

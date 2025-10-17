@@ -3,7 +3,6 @@ import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../contro
 import { getCalendar, getClassFeedback } from '../controllers/schedule.controller.js';
 import { getPayments, getPayment } from '../controllers/payment.controller.js';
 import { getBooks, getBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 
 const router = Router();
 
@@ -24,11 +23,6 @@ router.get('/payments/:id', getPayment);
 /* Endpoints de Book Catalog */
 router.get('/books', getBooks);
 router.get('/books/:id', getBook);
-
-/* Endpoints de profile */
-router.get('/profile', getProfileInfo);
-router.put('/profile', updateProfileInfo);
-router.put('/profile/address', updateAddress);
 
 export default router;
 

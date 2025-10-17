@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../controllers/parent/parent.controller.js';
+import { addNote, getFeedback, getTodayClasses, getNextClasses, getKidProfileInfo, createKidAddress, updateKidAddressById, linkKidToExistingAddress, unlinkKidAddress} from '../controllers/parent/parent.controller.js';
 import { getCalendar, getClassFeedback } from '../controllers/schedule.controller.js';
 import { getPayments, getPayment } from '../controllers/payment.controller.js';
 import { getBooks, getBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 
 const router = Router();
 
@@ -25,10 +24,11 @@ router.get('/payments/:id', getPayment);
 router.get('/books', getBooks);
 router.get('/books/:id', getBook);
 
-/* Endpoints de profile */
-router.get('/profile', getProfileInfo);
-router.put('/profile', updateProfileInfo);
-router.put('/profile/address', updateAddress);
-
+/* router.get('/kids/:kidId', authenticate, authorizeRole('padre'), getKidProfileInfo);
+router.post('/kids/:kidId/address', authenticate, authorizeRole('padre'), createKidAddress);
+router.put('/kids/:kidId/address/:addressId', authenticate, authorizeRole('padre'), updateKidAddressById);
+router.post('/kids/:kidId/link-address', authenticate, authorizeRole('padre'), linkKidToExistingAddress);
+router.delete('/kids/:kidId/address/:addressId', authenticate, authorizeRole('padre'), unlinkKidAddress);
+ */
 export default router;
 

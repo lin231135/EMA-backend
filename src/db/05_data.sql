@@ -74,6 +74,30 @@ INSERT INTO "User" (name, last_name, email, phone, password, role, description, 
 ('Arturo', 'Rangel', 'arturo.rangel@gmail.com', '+52-55-2234-1029', crypt('Password55', gen_salt('bf', 12)), 'padre', NULL, true),
 ('Marisol', 'Barrera', 'marisol.barrera@gmail.com', '+52-55-2234-1030', crypt('Password56', gen_salt('bf', 12)), 'padre', NULL, true);
 
+-- id del 57 al 65 Estudiantes adultos (9)
+INSERT INTO "User" (name, last_name, email, phone, password, role, description, is_active) VALUES
+('Santiago', 'Luna', 'santiago.luna@gmail.com', '+52-55-2234-1031', crypt('Password57', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Valeria', 'Cano', 'valeria.cano@gmail.com', '+52-55-2234-1032', crypt('Password58', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Emiliano', 'Vega', 'emiliano.vega@gmail.com', '+52-55-2234-1033', crypt('Password59', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Camila', 'Rivas', 'camila.rivas@gmail.com', '+52-55-2234-1034', crypt('Password60', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Matías', 'Santos', 'matias.santos@gmail.com', '+52-55-2234-1035', crypt('Password61', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Renata', 'Fuentes', 'renata.fuentes@gmail.com', '+52-55-2234-1036', crypt('Password62', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Thiago', 'Mora', 'thiago.mora@gmail.com', '+52-55-2234-1037', crypt('Password63', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Isabella', 'Cárdenas', 'isabella.cardenas@gmail.com', '+52-55-2234-1038', crypt('Password64', gen_salt('bf', 12)), 'estudiante', NULL, true),
+('Alejandro', 'Sierra', 'alejandro.sierra@gmail.com', '+52-55-2234-1039', crypt('Password65', gen_salt('bf', 12)), 'estudiante', NULL, true);
+
+-- inserts de ellos mismos como hijos (9) -- 
+insert into Kid (parent_id, name, birth_date) values
+(57, 'Santiago Luna', '1995-05-20'),
+(58, 'Valeria Cano', '1992-11-15'),
+(59, 'Emiliano Vega', '1988-07-30'),
+(60, 'Camila Rivas', '1990-03-25'),
+(61, 'Matías Santos', '1993-09-10'),
+(62, 'Renata Fuentes', '1994-12-05'),
+(63, 'Thiago Mora', '1989-06-18'),
+(64, 'Isabella Cárdenas', '1991-08-22'),
+(65, 'Alejandro Sierra', '1996-04-14');
+
 -- ======================== DIRECCIONES (100 registros) ======================
 INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighborhood, municipality, is_primary) VALUES
 -- Direcciones primarias para usuarios
