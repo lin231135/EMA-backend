@@ -3,10 +3,6 @@ import { getDashboard } from '../../controllers/admin/index.controller.js';
 import { getStudentsReport } from '../../controllers/student.report.controller.js';
 import { addBook, getBooks, getBook, updateBook, deleteBook } from '../../controllers/book.controller.js';
 import { getProfileInfo, updateProfileInfo, updateAddress } from '../../controllers/users.controller.js';
-import { getDashboard } from '../controllers/admin/admin.controller.js';
-import { getStudentsReport } from '../controllers/student.report.controller.js';
-import { addBook, getBooks, getBook, updateBook, deleteBook } from '../controllers/book.controller.js';
-import { getProfileInfo, updateProfileInfo, updateAddress } from '../controllers/users.controller.js';
 import {
   getRevenueReport,
   getBookingsReport,
