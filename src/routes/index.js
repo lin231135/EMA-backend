@@ -5,7 +5,7 @@ import courseRoutes from './courses.routes.js';
 import studentRoutes from './students.routes.js';
 import parentRoutes from './parents.routes.js';
 import teacherRoutes from './teachers.routes.js';
-import adminRoutes from './admins.routes.js';
+import adminRoutes from './admin/index.js';  // ✅ Cambiado a estructura de carpeta
 import supRoutes from './sup.routes.js';
 import notificationRoutes from './notifications.routes.js';
 import contact from './contact.routes.js';

@@ -23,16 +23,7 @@ BEGIN
     CREATE TYPE paymentmethod AS ENUM ('efectivo', 'transferencia');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstate') THEN
-    CREATE TYPE paymentstate AS ENUM ('pendiente', 'en revision', 'solvente', 'rechazado', 'cancelado');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
-    CREATE TYPE notification_type AS ENUM ('class_reminder', 'class_cancellation', 'payment_reminder', 'class_feedback');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_status') THEN
-    CREATE TYPE notification_status AS ENUM ('pending', 'sent', 'failed', 'read');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_channel') THEN
-    CREATE TYPE notification_channel AS ENUM ('email', 'sms', 'push', 'in_app');
+    CREATE TYPE paymentstate AS ENUM ('pendiente', 'en revision', 'aceptado', 'rechazado', 'cancelado');
   END IF;
 END $$;
 
