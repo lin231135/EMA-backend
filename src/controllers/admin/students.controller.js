@@ -399,6 +399,72 @@ export const deactivateStudent = async (req, res) => {
 };
 
 /**
+ * Reactivar un estudiante
+ * PATCH /api/admins/students/:id/reactivate
+ * Marca is_active = TRUE y agrega nota explicativa
+ */
+export const reactivateStudent = async (req, res) => {
+  const client = await db.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    // Verificar que el estudiante existe
+    const studentCheck = await client.query(
+      'SELECT id, name, is_active FROM Kid WHERE id = $1',
+      [id]
+    );
+    
+    if (studentCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Estudiante no encontrado' });
+    }
+    
+    if (studentCheck.rows[0].is_active) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'El estudiante ya está activo' });
+    }
+    
+    // Reactivar el estudiante
+    await client.query(
+      'UPDATE Kid SET is_active = TRUE WHERE id = $1',
+      [id]
+    );
+    
+    // Agregar nota explicativa
+    const noteText = reason 
+      ? `Cuenta reactivada. Razón: ${reason}` 
+      : 'Cuenta reactivada. Reactivación administrativa';
+    
+    await client.query(
+      'INSERT INTO Notes (kid_id, note, created_at) VALUES ($1, $2, NOW())',
+      [id, noteText]
+    );
+    
+    await client.query('COMMIT');
+    
+    res.status(200).json({
+      message: 'Estudiante reactivado exitosamente',
+      student: {
+        id: studentCheck.rows[0].id,
+        name: studentCheck.rows[0].name,
+        is_active: true
+      }
+    });
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al reactivar estudiante:', error);
+    res.status(500).json({ error: 'Error al reactivar el estudiante' });
+  } finally {
+    client.release();
+  }
+};
+
+/**
  * Eliminar un estudiante permanentemente (hard delete)
  * DELETE /api/admins/students/:id
  * ADVERTENCIA: Esta operación eliminará permanentemente todos los datos relacionados
