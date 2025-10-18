@@ -48,7 +48,6 @@ const checkRole = (role) => {
 
 // Exportar middlewares específicos por rol
 export const isAdmin = checkRole('admin');
-export const isSup = checkRole('sup');
 export const isTeacher = checkRole('maestro');
 export const isParent = checkRole('padre');
 export const isStudent = checkRole('estudiante');

@@ -133,3 +133,79 @@ export async function getParentProfiles(req, res) {
     return res.status(500).json({ message: "Server error" });
   }
 }
+
+/**
+ * POST /api/parents/children
+ * Crea un nuevo perfil de hijo asociado al padre autenticado
+ */
+export async function createChild(req, res) {
+  try {
+    // El ID del usuario y su rol ya están validados por verifyToken middleware
+    const authUserId = req.user.id;
+
+    // Extraer datos validados del body (ya validados por middleware Zod)
+    const { name, birth_date, is_solvent = false } = req.body;
+
+    // Verificar que el padre existe y está activo en la base de datos
+    const parentCheck = await pool.query(
+      `SELECT id FROM "User" WHERE id = $1 AND is_active = TRUE AND role = 'padre' LIMIT 1`,
+      [authUserId]
+    );
+    
+    if (parentCheck.rowCount === 0) {
+      return res.status(404).json({ 
+        error: "Not Found",
+        message: "Parent user not found or inactive" 
+      });
+    }
+
+    // Insertar el nuevo hijo en la base de datos
+    const insertQuery = `
+      INSERT INTO Kid (parent_id, name, birth_date, is_solvent, is_active)
+      VALUES ($1, $2, $3, $4, TRUE)
+      RETURNING id, name, birth_date, is_solvent, is_active, created_at
+    `;
+
+    const result = await pool.query(insertQuery, [
+      authUserId,
+      name,
+      birth_date,
+      is_solvent
+    ]);
+
+    // Obtener el hijo recién creado
+    const newKid = result.rows[0];
+
+    // Retornar el perfil del hijo creado (201 Created)
+    return res.status(201).json({
+      message: "Child profile created successfully",
+      child: {
+        id: newKid.id,
+        name: newKid.name,
+        birthDate: newKid.birth_date,
+        isSolvent: newKid.is_solvent,
+        isActive: newKid.is_active,
+        createdAt: newKid.created_at
+      }
+    });
+
+  } catch (err) {
+    // Registrar el error completo en consola para debugging
+    console.error("createChild error:", err);
+    
+    // Errores de violación de constraint de base de datos (23xxx en PostgreSQL)
+    if (err.code && err.code.startsWith('23')) {
+      return res.status(409).json({ 
+        error: "Conflict",
+        message: "Database constraint violation",
+        detail: err.detail || "The operation conflicts with existing data"
+      });
+    }
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while creating the child profile" 
+    });
+  }
+}

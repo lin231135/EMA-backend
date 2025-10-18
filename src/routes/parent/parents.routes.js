@@ -9,6 +9,7 @@ import { verifyToken } from "../../middlewares/auth.js";
 import {
   getChildrenByParent,
   getParentProfiles,
+  createChild,
 } from "../../controllers/parent/selectProfile.controller.js";
 
 // Controladores de dashboard del padre
@@ -20,6 +21,12 @@ import {
   getNextClasses,
 } from "../../controllers/parent/parent.controller.js";
 
+// Validadores
+import { 
+  createKidSchema, 
+  validate 
+} from "../../validators/parent/kid.schema.js";
+
 const router = Router();
 
 /* -------------------------------------------------------------------------- */
@@ -30,6 +37,12 @@ const router = Router();
  * Devuelve todos los hijos asociados al padre logueado (para pantalla de selección de perfil)
  */
 router.get("/children", verifyToken, getChildrenByParent);
+
+/**
+ * POST /api/parents/children
+ * Crea un nuevo perfil de hijo asociado al padre logueado
+ */
+router.post("/children", verifyToken, validate(createKidSchema), createChild);
 
 /**
  * GET /api/parents/profiles

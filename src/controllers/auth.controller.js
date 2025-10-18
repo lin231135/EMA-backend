@@ -3,9 +3,6 @@ import bcrypt from 'bcryptjs';      // Librería para hash y comparación segura
 import jwt from 'jsonwebtoken';     // Librería para generación y verificación de JSON Web Tokens
 import db from '../db/connection.js'; // Pool de conexión a PostgreSQL
 
-// Constante que define los roles válidos en el sistema
-const VALID_ROLES = ['admin', 'maestro', 'padre'];
-
 /**
  * POST /api/auth/login
  * Autentica un usuario con email y contraseña
