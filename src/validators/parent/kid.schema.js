@@ -26,7 +26,20 @@ export const createKidSchema = z.object({
 });
 
 /**
- * Middleware de validación genérico usando Zod
+ * Schema de validación para eliminar un hijo
+ * Valida que el parámetro kidId sea un número entero positivo
+ */
+export const deleteKidSchema = z.object({
+  kidId: z.string({
+    required_error: 'El ID del hijo es obligatorio',
+    invalid_type_error: 'El ID del hijo debe ser una cadena de texto'
+  })
+    .regex(/^\d+$/, 'El ID del hijo debe ser un número entero positivo')
+    .transform((val) => parseInt(val, 10))
+});
+
+/**
+ * Middleware de validación genérico usando Zod para el body
  */
 export const validate = (schema) => {
   return (req, res, next) => {
@@ -46,6 +59,39 @@ export const validate = (schema) => {
         
         return res.status(400).json({
           error: 'Error de validación',
+          details: errors
+        });
+      }
+      
+      // Error inesperado
+      return res.status(500).json({
+        error: 'Error interno de validación'
+      });
+    }
+  };
+};
+
+/**
+ * Middleware de validación genérico usando Zod para los parámetros de ruta
+ */
+export const validateParams = (schema) => {
+  return (req, res, next) => {
+    try {
+      const validatedData = schema.parse(req.params);
+      
+      // Reemplaza los parámetros originales con los validados
+      req.params = validatedData;
+      
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message
+        }));
+        
+        return res.status(400).json({
+          error: 'Error de validación de parámetros',
           details: errors
         });
       }

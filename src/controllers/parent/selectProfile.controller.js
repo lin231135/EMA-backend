@@ -209,3 +209,103 @@ export async function createChild(req, res) {
     });
   }
 }
+
+/**
+ * DELETE /api/parents/children/:kidId
+ * Elimina un perfil de hijo asociado al padre autenticado
+ */
+export async function deleteChild(req, res) {
+  try {
+    // El ID del usuario y su rol ya están validados por verifyToken middleware
+    const authUserId = req.user.id;
+    
+    // Extraer el kidId validado de los parámetros (ya validado por middleware Zod)
+    const { kidId } = req.params;
+
+    // Verificar que el padre existe y está activo
+    const parentCheck = await pool.query(
+      `SELECT id FROM "User" WHERE id = $1 AND is_active = TRUE LIMIT 1`,
+      [authUserId]
+    );
+    
+    if (parentCheck.rowCount === 0) {
+      return res.status(404).json({ 
+        error: "Not Found",
+        message: "Parent user not found or inactive" 
+      });
+    }
+
+    // Verificar que el hijo existe y pertenece al padre autenticado
+    const kidCheck = await pool.query(
+      `SELECT id, name, parent_id FROM Kid WHERE id = $1 LIMIT 1`,
+      [kidId]
+    );
+    
+    // 404: El hijo no existe en la base de datos
+    if (kidCheck.rowCount === 0) {
+      return res.status(404).json({ 
+        error: "Not Found",
+        message: "Child not found" 
+      });
+    }
+
+    const kid = kidCheck.rows[0];
+
+    // 403: El hijo existe pero no pertenece al padre autenticado
+    if (kid.parent_id !== authUserId) {
+      return res.status(403).json({ 
+        error: "Forbidden",
+        message: "You do not have permission to delete this child profile" 
+      });
+    }
+
+    // Eliminar el hijo de la base de datos
+    // El ON DELETE CASCADE en la FK se encargará de eliminar registros relacionados
+    const deleteQuery = `
+      DELETE FROM Kid
+      WHERE id = $1
+      RETURNING id, name
+    `;
+
+    const result = await pool.query(deleteQuery, [kidId]);
+
+    // Si no se eliminó ningún registro (no debería ocurrir en este punto, pero por seguridad)
+    if (result.rowCount === 0) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        message: "Failed to delete child profile"
+      });
+    }
+
+    const deletedKid = result.rows[0];
+
+    // Retornar respuesta exitosa (200 OK con información del hijo eliminado)
+    return res.status(200).json({
+      message: "Child profile deleted successfully",
+      deleted: {
+        id: deletedKid.id,
+        name: deletedKid.name
+      }
+    });
+
+  } catch (err) {
+    // Registrar el error completo en consola para debugging
+    console.error("deleteChild error:", err);
+    
+    // Errores de violación de constraint de base de datos (23xxx en PostgreSQL)
+    // Por ejemplo, si hay registros dependientes que no permiten la eliminación
+    if (err.code && err.code.startsWith('23')) {
+      return res.status(409).json({ 
+        error: "Conflict",
+        message: "Cannot delete child profile due to existing related data",
+        detail: err.detail || "The child profile is referenced by other records"
+      });
+    }
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while deleting the child profile" 
+    });
+  }
+}

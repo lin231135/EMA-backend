@@ -10,6 +10,7 @@ import {
   getChildrenByParent,
   getParentProfiles,
   createChild,
+  deleteChild,
 } from "../../controllers/parent/selectProfile.controller.js";
 
 // Controladores de dashboard del padre
@@ -24,7 +25,9 @@ import {
 // Validadores
 import { 
   createKidSchema, 
-  validate 
+  deleteKidSchema,
+  validate,
+  validateParams 
 } from "../../validators/parent/kid.schema.js";
 
 const router = Router();
@@ -43,6 +46,12 @@ router.get("/children", verifyToken, getChildrenByParent);
  * Crea un nuevo perfil de hijo asociado al padre logueado
  */
 router.post("/children", verifyToken, validate(createKidSchema), createChild);
+
+/**
+ * DELETE /api/parents/children/:kidId
+ * Elimina un perfil de hijo asociado al padre logueado
+ */
+router.delete("/children/:kidId", verifyToken, validateParams(deleteKidSchema), deleteChild);
 
 /**
  * GET /api/parents/profiles
