@@ -32,7 +32,7 @@ export async function getChildrenByParent(req, res) {
     // Consultar todos los hijos asociados a este padre desde la tabla Kid
     // Los hijos se ordenan alfabéticamente por nombre
     const kidsQ = await pool.query(
-      `SELECT id, name, is_active
+      `SELECT id, name, birth_date, is_solvent, is_active
          FROM Kid
         WHERE parent_id = $1
         ORDER BY name`,
@@ -44,9 +44,10 @@ export async function getChildrenByParent(req, res) {
     const children = kidsQ.rows.map((k) => ({
       id: k.id,                // ID único del hijo
       name: k.name,            // Nombre del hijo
+      birthDate: k.birth_date, // Fecha de nacimiento del hijo
+      isSolvent: k.is_solvent, // Estado de solvencia del hijo
       isActive: k.is_active,   // Estado del perfil
       avatarUrl: null,         // Avatar no disponible en el esquema actual de Kid
-      type: "student",         // Tipo de perfil para distinguir en el frontend
     }));
 
     // Retornar la lista de hijos en formato JSON
@@ -525,6 +526,132 @@ export async function unarchiveChild(req, res) {
     return res.status(500).json({ 
       error: "Internal Server Error",
       message: "An unexpected error occurred while unarchiving the child profile" 
+    });
+  }
+}
+
+/**
+ * PUT /api/parents/children/:kidId
+ * Actualiza la información de un hijo asociado al padre autenticado
+ * Permite actualizar: name, birth_date, is_solvent
+ */
+export async function updateChild(req, res) {
+  try {
+    // El ID del usuario y su rol ya están validados por verifyToken middleware
+    const authUserId = req.user.id;
+    
+    // Extraer el kidId validado de los parámetros (ya validado por middleware Zod)
+    const { kidId } = req.params;
+    
+    // Extraer datos validados del body (ya validados por middleware Zod)
+    const { name, birth_date } = req.body;
+
+    // Verificar que el padre existe y está activo
+    const parentCheck = await pool.query(
+      `SELECT id FROM "User" WHERE id = $1 AND is_active = TRUE LIMIT 1`,
+      [authUserId]
+    );
+    
+    if (parentCheck.rowCount === 0) {
+      return res.status(404).json({ 
+        error: "Not Found",
+        message: "Parent user not found or inactive" 
+      });
+    }
+
+    // Verificar que el hijo existe y pertenece al padre autenticado
+    const kidCheck = await pool.query(
+      `SELECT id, name, parent_id, is_active FROM Kid WHERE id = $1 LIMIT 1`,
+      [kidId]
+    );
+    
+    // 404: El hijo no existe en la base de datos
+    if (kidCheck.rowCount === 0) {
+      return res.status(404).json({ 
+        error: "Not Found",
+        message: "Child not found" 
+      });
+    }
+
+    const kid = kidCheck.rows[0];
+
+    // 403: El hijo existe pero no pertenece al padre autenticado
+    if (kid.parent_id !== authUserId) {
+      return res.status(403).json({ 
+        error: "Forbidden",
+        message: "You do not have permission to update this child profile" 
+      });
+    }
+
+    // Construir la consulta de actualización dinámicamente según los campos proporcionados
+    const fieldsToUpdate = [];
+    const values = [];
+    let paramCounter = 1;
+
+    if (name !== undefined) {
+      fieldsToUpdate.push(`name = $${paramCounter}`);
+      values.push(name);
+      paramCounter++;
+    }
+
+    if (birth_date !== undefined) {
+      fieldsToUpdate.push(`birth_date = $${paramCounter}`);
+      values.push(birth_date);
+      paramCounter++;
+    }
+
+    // Agregar el kidId como último parámetro
+    values.push(kidId);
+
+    // Actualizar el hijo en la base de datos
+    const updateQuery = `
+      UPDATE Kid
+      SET ${fieldsToUpdate.join(', ')}
+      WHERE id = $${paramCounter}
+      RETURNING id, name, birth_date, is_solvent, is_active
+    `;
+
+    const result = await pool.query(updateQuery, values);
+
+    // Si no se actualizó ningún registro (no debería ocurrir en este punto, pero por seguridad)
+    if (result.rowCount === 0) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        message: "Failed to update child profile"
+      });
+    }
+
+    const updatedKid = result.rows[0];
+
+    // Retornar respuesta exitosa (200 OK con información del hijo actualizado)
+    return res.status(200).json({
+      message: "Child profile updated successfully",
+      child: {
+        id: updatedKid.id,
+        name: updatedKid.name,
+        birthDate: updatedKid.birth_date,
+        isSolvent: updatedKid.is_solvent,
+        isActive: updatedKid.is_active
+      }
+    });
+
+  } catch (err) {
+    // Registrar el error completo en consola para debugging
+    console.error("updateChild error:", err);
+    
+    // Errores de violación de constraint de base de datos (23xxx en PostgreSQL)
+    if (err.code && err.code.startsWith('23')) {
+      return res.status(409).json({ 
+        error: "Conflict",
+        message: "Database constraint violation",
+        detail: err.detail || "The operation conflicts with existing data"
+      });
+    }
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "An unexpected error occurred while updating the child profile" 
     });
   }
 }

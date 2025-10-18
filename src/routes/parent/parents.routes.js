@@ -10,6 +10,7 @@ import {
   getChildrenByParent,
   getParentProfiles,
   createChild,
+  updateChild,
   deleteChild,
   archiveChild,
   unarchiveChild,
@@ -26,10 +27,12 @@ import {
 
 // Validadores
 import { 
-  createKidSchema, 
+  createKidSchema,
+  updateKidSchema,
   deleteKidSchema,
   archiveKidSchema,
   unarchiveKidSchema,
+  updateKidParamSchema,
   validate,
   validateParams 
 } from "../../validators/parent/kid.schema.js";
@@ -50,6 +53,12 @@ router.get("/children", verifyToken, getChildrenByParent);
  * Crea un nuevo perfil de hijo asociado al padre logueado
  */
 router.post("/children", verifyToken, validate(createKidSchema), createChild);
+
+/**
+ * PUT /api/parents/children/:kidId
+ * Actualiza la información de un hijo asociado al padre logueado
+ */
+router.put("/children/:kidId", verifyToken, validateParams(updateKidParamSchema), validate(updateKidSchema), updateChild);
 
 /**
  * DELETE /api/parents/children/:kidId

@@ -26,6 +26,31 @@ export const createKidSchema = z.object({
 });
 
 /**
+ * Schema de validación para actualizar un hijo (body)
+ * Todos los campos son opcionales, pero al menos uno debe estar presente
+ */
+export const updateKidSchema = z.object({
+  name: z.string({
+    invalid_type_error: 'El nombre debe ser una cadena de texto'
+  })
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(255, 'El nombre no puede exceder 255 caracteres')
+    .trim()
+    .optional(),
+  
+  birth_date: z.string({
+    invalid_type_error: 'La fecha de nacimiento debe ser una cadena de texto'
+  })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de nacimiento debe tener el formato YYYY-MM-DD')
+    .optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+  }
+);
+
+/**
  * Schema de validación para eliminar un hijo
  * Valida que el parámetro kidId sea un número entero positivo
  */
@@ -49,6 +74,12 @@ export const archiveKidSchema = deleteKidSchema;
  * Reutiliza la misma validación que deleteKidSchema
  */
 export const unarchiveKidSchema = deleteKidSchema;
+
+/**
+ * Schema de validación (de params) para actualizar la información de un hijo
+ * Reutiliza la misma validación que deleteKidSchema
+ */
+export const updateKidParamSchema = deleteKidSchema;
 
 /**
  * Middleware de validación genérico usando Zod para el body
