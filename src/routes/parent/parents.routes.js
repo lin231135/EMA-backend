@@ -11,6 +11,8 @@ import {
   getParentProfiles,
   createChild,
   deleteChild,
+  archiveChild,
+  unarchiveChild,
 } from "../../controllers/parent/selectProfile.controller.js";
 
 // Controladores de dashboard del padre
@@ -26,6 +28,8 @@ import {
 import { 
   createKidSchema, 
   deleteKidSchema,
+  archiveKidSchema,
+  unarchiveKidSchema,
   validate,
   validateParams 
 } from "../../validators/parent/kid.schema.js";
@@ -52,6 +56,18 @@ router.post("/children", verifyToken, validate(createKidSchema), createChild);
  * Elimina un perfil de hijo asociado al padre logueado
  */
 router.delete("/children/:kidId", verifyToken, validateParams(deleteKidSchema), deleteChild);
+
+/**
+ * PATCH /api/parents/children/:kidId/archive
+ * Archiva (desactiva) un perfil de hijo asociado al padre logueado
+ */
+router.patch("/children/:kidId/archive", verifyToken, validateParams(archiveKidSchema), archiveChild);
+
+/**
+ * PATCH /api/parents/children/:kidId/unarchive
+ * Desarchiva (reactiva) un perfil de hijo asociado al padre logueado
+ */
+router.patch("/children/:kidId/unarchive", verifyToken, validateParams(unarchiveKidSchema), unarchiveChild);
 
 /**
  * GET /api/parents/profiles

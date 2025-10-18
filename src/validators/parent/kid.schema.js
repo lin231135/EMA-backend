@@ -39,6 +39,18 @@ export const deleteKidSchema = z.object({
 });
 
 /**
+ * Schema de validación para archivar/desactivar un hijo
+ * Reutiliza la misma validación que deleteKidSchema
+ */
+export const archiveKidSchema = deleteKidSchema;
+
+/**
+ * Schema de validación para desarchivar/reactivar un hijo
+ * Reutiliza la misma validación que deleteKidSchema
+ */
+export const unarchiveKidSchema = deleteKidSchema;
+
+/**
  * Middleware de validación genérico usando Zod para el body
  */
 export const validate = (schema) => {
