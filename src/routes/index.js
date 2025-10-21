@@ -10,6 +10,7 @@ import supRoutes from './sup.routes.js';
 import contact from './contact.routes.js';
 import parentsRoutes from "./parent/parents.routes.js";
 import joinTeam from './join.team.routes.js';
+import studentPaymentRoutes from './student/studentsPayments.routes.js';
 
 const router = Router();
 
@@ -25,5 +26,7 @@ router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/contact', contact)  // /api/contact/*
 router.use('/join-team', joinTeam)  // /api/join-team/* 
+router.use('/students', studentRoutes);
+router.use('/students', studentPaymentRoutes); 
 
 export default router;
