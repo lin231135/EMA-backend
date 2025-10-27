@@ -37,15 +37,17 @@ function normalizeRow(r) {
 
   return {
     id: r.item_id,
+    paymentId: r.payment_id,           // ID del pago para modal de detalles
     serialNumber: serial,
     description,
     monthPaid: month,   // EN; el frontend ya traduce el mes
     year,
     totalCost: money(amount),
-    state: r.payment_state,  // Estado del pago: pendiente, en revision, aceptado, rechazado, cancelado
-    paymentId: r.payment_id, // ID del pago para consultar detalles
-    note: r.note,            // Nota del usuario
-    adminNote: r.admin_note, // Nota administrativa
+    state: r.payment_state || 'pendiente',  // Estado del pago
+    paymentMethod: r.payment_method,         // Método de pago
+    adminNote: r.admin_note || null,         // Nota administrativa
+    userNote: r.user_note || null,           // Nota del usuario
+    referencePic: r.reference_pic || null,   // Comprobante
   };
 }
 
@@ -94,8 +96,9 @@ export async function getParentPaymentHistory(req, res) {
         p.total             AS payment_total,
         p.payment_method    AS payment_method,
         p.state             AS payment_state,
-        p.note              AS note,
+        p.note              AS user_note,
         p.admin_note        AS admin_note,
+        p.reference_pic     AS reference_pic,
         pi.id               AS item_id,
         pi.subtotal         AS subtotal,
         pi.unit_cost        AS unit_cost,
@@ -241,6 +244,9 @@ export async function getStudentPaymentHistory(req, res) {
         p.total             AS payment_total,
         p.payment_method    AS payment_method,
         p.state             AS payment_state,
+        p.note              AS user_note,
+        p.admin_note        AS admin_note,
+        p.reference_pic     AS reference_pic,
         pi.id               AS item_id,
         pi.subtotal         AS subtotal,
         pi.unit_cost        AS unit_cost,
