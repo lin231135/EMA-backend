@@ -53,7 +53,9 @@ export const getPayments = async (req, res) => {
  * Crear un pago manualmente (Admin)
  * POST /api/admins/payments
  * Body: { user_id, payment_method, total, payment_date, booking_ids, state, reference_pic, note }
- * FLUJO: Padre registra pago → estado 'en revision' → Admin confirma/rechaza/cancela
+ * FLUJO: 
+ * - Efectivo → estado 'aceptado' (admin registra directamente)
+ * - Transferencia/Depósito → estado 'en revision' → Admin confirma/rechaza/cancela
  */
 export const createPayment = async (req, res) => {
   const client = await db.connect();
@@ -67,17 +69,22 @@ export const createPayment = async (req, res) => {
       total,
       payment_date,
       booking_ids, // Array de IDs de bookings a pagar
-      state = 'en revision', // Por defecto en revisión (admin debe confirmar)
+      state,
       reference_pic = null,
       note = null
     } = req.body;
+
+    // Determinar el estado inicial según el método de pago
+    // Si es efectivo, se acepta automáticamente (admin registra directamente)
+    // Si es transferencia/depósito, queda en revisión
+    const initialState = state || (payment_method === 'efectivo' ? 'aceptado' : 'en revision');
 
     // 1. Crear el pago
     const paymentResult = await client.query(
       `INSERT INTO Payment (user_id, payment_method, total, payment_date, state, reference_pic, note)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [user_id, payment_method, total, payment_date, state, reference_pic, note]
+      [user_id, payment_method, total, payment_date, initialState, reference_pic, note]
     );
 
     const payment = paymentResult.rows[0];
@@ -105,10 +112,20 @@ export const createPayment = async (req, res) => {
         }
       }
 
-      // 3. NO actualizar is_solvent aquí - solo cuando se confirme el pago
-            // Valores predeterminados
-      // El estado inicial es 'en revision', no 'aceptado'
-      // is_solvent se actualiza cuando el admin confirma el pago
+      // 3. Si el pago es en efectivo y está aceptado, actualizar is_solvent automáticamente
+      if (initialState === 'aceptado') {
+        await client.query(
+          `UPDATE Kid 
+           SET is_solvent = TRUE 
+           WHERE id IN (
+             SELECT DISTINCT b.kid_id
+             FROM Payment_item pi
+             JOIN Booking b ON pi.booking_id = b.id
+             WHERE pi.payment_id = $1 AND b.kid_id IS NOT NULL
+           )`,
+          [payment.id]
+        );
+      }
     }
 
     await client.query('COMMIT');
@@ -149,7 +166,8 @@ export const getPayment = async (req, res) => {
         p.payment_date,
         p.state,
         p.reference_pic,
-        p.note
+        p.note,
+        p.admin_note
       FROM Payment p
       JOIN "User" u ON p.user_id = u.id
       WHERE p.id = $1`,
@@ -172,12 +190,16 @@ export const getPayment = async (req, res) => {
         bk.schedule_id,
         bk.kid_id,
         k.name as student_name,
-        c.name as course_name
+        c.name as course_name,
+        s.schedule_date,
+        s.start_time,
+        s.end_time
       FROM Payment_item pi
       LEFT JOIN Book b ON pi.book_id = b.id
       LEFT JOIN Booking bk ON pi.booking_id = bk.id
       LEFT JOIN Kid k ON bk.kid_id = k.id
       LEFT JOIN Course c ON bk.course_id = c.id
+      LEFT JOIN Schedule s ON bk.schedule_id = s.id
       WHERE pi.payment_id = $1`,
       [id]
     );
@@ -334,10 +356,10 @@ export const confirmPayment = async (req, res) => {
       });
     }
 
-    // Actualizar estado del pago a 'aceptado'
+    // Actualizar estado del pago a 'aceptado' con nota administrativa
     const result = await client.query(
       `UPDATE Payment 
-       SET state = 'aceptado', note = $1 
+       SET state = 'aceptado', admin_note = $1 
        WHERE id = $2 
        RETURNING *`,
       [note || null, id]
@@ -396,10 +418,10 @@ export const rejectPayment = async (req, res) => {
       return res.status(404).json({ error: 'Pago no encontrado' });
     }
 
-    // Actualizar estado del pago a 'rechazado'
+    // Actualizar estado del pago a 'rechazado' con nota administrativa
     const result = await client.query(
       `UPDATE Payment 
-       SET state = 'rechazado', note = $1 
+       SET state = 'rechazado', admin_note = $1 
        WHERE id = $2 
        RETURNING *`,
       [note, id]

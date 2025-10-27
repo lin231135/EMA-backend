@@ -42,6 +42,10 @@ function normalizeRow(r) {
     monthPaid: month,   // EN; el frontend ya traduce el mes
     year,
     totalCost: money(amount),
+    state: r.payment_state,  // Estado del pago: pendiente, en revision, aceptado, rechazado, cancelado
+    paymentId: r.payment_id, // ID del pago para consultar detalles
+    note: r.note,            // Nota del usuario
+    adminNote: r.admin_note, // Nota administrativa
   };
 }
 
@@ -90,6 +94,8 @@ export async function getParentPaymentHistory(req, res) {
         p.total             AS payment_total,
         p.payment_method    AS payment_method,
         p.state             AS payment_state,
+        p.note              AS note,
+        p.admin_note        AS admin_note,
         pi.id               AS item_id,
         pi.subtotal         AS subtotal,
         pi.unit_cost        AS unit_cost,

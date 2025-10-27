@@ -88,17 +88,41 @@ export const createStudent = async (req, res) => {
  */
 export const getStudents = async (req, res) => {
   try {
-    // Obtener todos los estudiantes con información básica
-    const result = await db.query(
-      `SELECT 
+    const { parent_id } = req.query;
+    
+    console.log('getStudents - req.query:', req.query);
+    console.log('getStudents - parent_id:', parent_id);
+    
+    // Construir query base
+    let query = `SELECT 
         k.id,
         'Estudiante' as role,
         k.name,
         k.is_active,
-        k.created_at
-       FROM Kid k
-       ORDER BY k.created_at DESC`
-    );
+        k.created_at,
+        k.parent_id
+       FROM Kid k`;
+    
+    const params = [];
+    
+    // Agregar filtro por parent_id si se proporciona
+    if (parent_id) {
+      query += ` WHERE k.parent_id = $1`;
+      params.push(parent_id);
+      console.log('getStudents - Filtrando por parent_id:', parent_id);
+    } else {
+      console.log('getStudents - Sin filtro de parent_id, devolviendo todos');
+    }
+    
+    query += ` ORDER BY k.created_at DESC`;
+    
+    console.log('getStudents - Query:', query);
+    console.log('getStudents - Params:', params);
+    
+    // Ejecutar query
+    const result = await db.query(query, params);
+    
+    console.log('getStudents - Resultados encontrados:', result.rows.length);
     
     res.status(200).json({
       students: result.rows,

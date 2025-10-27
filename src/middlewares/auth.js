@@ -46,6 +46,40 @@ const checkRole = (role) => {
   };
 };
 
+/**
+ * Middleware de autenticación que verifica token y permite múltiples roles
+ * @param {Array<string>} allowedRoles - Array de roles permitidos
+ * @returns {Function} Middleware function
+ */
+export const authenticate = (allowedRoles = []) => {
+  return (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token requerido o formato inválido' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwtsecret');
+      req.user = { id: decoded.id, role: decoded.role };
+      
+      // Si se especificaron roles, verificar que el usuario tenga uno de ellos
+      if (allowedRoles.length > 0 && !allowedRoles.includes(decoded.role)) {
+        return res.status(403).json({ 
+          error: `Acceso denegado. Se requiere uno de los siguientes roles: ${allowedRoles.join(', ')}` 
+        });
+      }
+      
+      next();
+    } catch (err) {
+      console.error(err);
+      res.status(401).json({ error: 'Token inválido' });
+    }
+  };
+};
+
 // Exportar middlewares específicos por rol
 export const isAdmin = checkRole('admin');
 export const isTeacher = checkRole('maestro');

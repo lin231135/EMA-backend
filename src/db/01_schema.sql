@@ -142,7 +142,8 @@ CREATE TABLE IF NOT EXISTS Payment (
   payment_date TIMESTAMP NOT NULL DEFAULT NOW(),
   state paymentstate NOT NULL,
   reference_pic VARCHAR(255),
-  note VARCHAR(255)
+  note VARCHAR(255),
+  admin_note TEXT
 );
 
 -- Ítems de pago (pueden ser clases o libros)

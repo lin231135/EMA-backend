@@ -12,6 +12,7 @@ import {
 } from '../../controllers/admin/reports.controller.js';
 import studentsRoutes from './students.routes.js';
 import paymentsRoutes from './payments.routes.js';
+import bookingsRoutes from './bookings.routes.js';
 
 const router = Router();
 
@@ -23,6 +24,9 @@ router.use('/students', studentsRoutes);
 
 /* Endpoints de gestión de pagos (Payments Management) */
 router.use('/payments', paymentsRoutes);
+
+/* Endpoints de gestión de bookings (Bookings Management) */
+router.use('/bookings', bookingsRoutes);
 
 /* Endpoints de students list report*/
 router.get('/students-report', getStudentsReport);

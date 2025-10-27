@@ -11,6 +11,7 @@ import contact from './contact.routes.js';
 import parentsRoutes from "./parent/parents.routes.js";
 import joinTeam from './join.team.routes.js';
 import studentPaymentRoutes from './student/studentsPayments.routes.js';
+import uploadRoutes from './app/upload.routes.js';
 
 const router = Router();
 
@@ -26,6 +27,7 @@ router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/contact', contact)  // /api/contact/*
 router.use('/join-team', joinTeam)  // /api/join-team/* 
+router.use('/upload', uploadRoutes)  // /api/upload/* (ImageKit uploads)
 router.use('/students', studentRoutes);
 router.use('/students', studentPaymentRoutes); 
 
