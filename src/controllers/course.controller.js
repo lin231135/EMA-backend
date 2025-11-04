@@ -77,3 +77,51 @@ export async function createCourse(req, res) {
 
   }
 };
+
+/**
+ * Controlador para obtener todos los cursos activos
+ * @route GET /api/courses
+ * @access Público (o puede ser privado según necesidades)
+ */
+export async function getActiveCourses(req, res) {
+  try {
+    // Obtener cursos activos ordenados por nombre
+    const result = await db.query(
+      `SELECT 
+        id, 
+        name, 
+        modality, 
+        capacity, 
+        cost, 
+        is_active, 
+        created_at
+       FROM Course 
+       WHERE is_active = TRUE
+       ORDER BY name ASC`
+    );
+
+    const courses = result.rows.map(course => ({
+      id: course.id,
+      name: course.name,
+      modality: course.modality,
+      capacity: course.capacity,
+      cost: parseFloat(course.cost),
+      is_active: course.is_active,
+      created_at: course.created_at
+    }));
+
+    return res.status(200).json({
+      message: 'Cursos activos obtenidos exitosamente',
+      count: courses.length,
+      courses
+    });
+
+  } catch (error) {
+    console.error('Error al obtener cursos activos:', error);
+
+    return res.status(500).json({
+      error: 'Error interno del servidor',
+      message: 'Ocurrió un error al obtener los cursos activos'
+    });
+  }
+};
