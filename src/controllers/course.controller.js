@@ -1,108 +1,79 @@
 // src/controllers/course.controller.js
 import db from '../db/connection.js';
 
-// Utilidad para mapear curso
-const mapCourse = (row) => ({
-  id: row.id,
-  name: row.name,
-  teacher_id: row.teacher_id,
-  modality: row.modality,
-  capacity: row.capacity,
-  cost: row.cost,
-  is_active: row.is_active,
-  created_at: row.created_at
-});
-
-// Crear curso
-export const createCourse = async (req, res) => {
-  const { name, teacher_id, modality, capacity, cost } = req.body;
-
-  if (!name || !teacher_id || !modality || !capacity || !cost) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-  }
-
+/**
+ * Controlador para crear un nuevo curso
+ * @route POST /api/courses
+ * @access Privado - Solo Admin
+ */
+export async function createCourse(req, res) {
   try {
+    const { name, modality, capacity, cost, is_active = true } = req.body;
+
+    // Verificar si ya existe un curso con el mismo nombre y modalidad
+    const existingCourse = await db.query(
+      `SELECT id, name, modality 
+       FROM Course 
+       WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) 
+       AND modality = $2 
+       AND is_active = TRUE`,
+      [name, modality]
+    );
+
+    if (existingCourse.rows.length > 0) {
+      return res.status(409).json({
+        error: 'Conflicto',
+        message: `Ya existe un curso activo con el nombre "${name}" en modalidad "${modality}"`
+      });
+    }
+
+    // Insertar el nuevo curso
     const result = await db.query(
-      `INSERT INTO Course (name, teacher_id, modality, capacity, cost)
+      `INSERT INTO Course (name, modality, capacity, cost, is_active)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [name, teacher_id, modality, capacity, cost]
-    );
-    return res.status(201).json({ course: mapCourse(result.rows[0]) });
-  } catch (error) {
-    console.error('createCourse error', error);
-    return res.status(500).json({ message: 'Error al crear curso' });
-  }
-};
-
-// Listar todos
-export const getCourses = async (_req, res) => {
-  try {
-    const result = await db.query('SELECT * FROM Course ORDER BY id ASC');
-    return res.status(200).json({ courses: result.rows.map(mapCourse) });
-  } catch (error) {
-    console.error('getCourses error', error);
-    return res.status(500).json({ message: 'Error al obtener cursos' });
-  }
-};
-
-// Obtener por id
-export const getCourseById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await db.query('SELECT * FROM Course WHERE id = $1', [id]);
-    if (result.rowCount === 0) return res.status(404).json({ message: 'Curso no encontrado' });
-    return res.status(200).json({ course: mapCourse(result.rows[0]) });
-  } catch (error) {
-    console.error('getCourseById error', error);
-    return res.status(500).json({ message: 'Error al obtener curso' });
-  }
-};
-
-// Actualizar
-export const updateCourse = async (req, res) => {
-  const { id } = req.params;
-  const { name, teacher_id, modality, capacity, cost, is_active } = req.body;
-
-  try {
-    const fields = [];
-    const values = [];
-    let idx = 1;
-
-    if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name); }
-    if (teacher_id !== undefined) { fields.push(`teacher_id = $${idx++}`); values.push(teacher_id); }
-    if (modality !== undefined) { fields.push(`modality = $${idx++}`); values.push(modality); }
-    if (capacity !== undefined) { fields.push(`capacity = $${idx++}`); values.push(capacity); }
-    if (cost !== undefined) { fields.push(`cost = $${idx++}`); values.push(cost); }
-    if (is_active !== undefined) { fields.push(`is_active = $${idx++}`); values.push(is_active); }
-
-    if (fields.length === 0) return res.status(400).json({ message: 'No hay campos para actualizar' });
-
-    values.push(id);
-
-    const result = await db.query(
-      `UPDATE Course SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-      values
+       RETURNING id, name, modality, capacity, cost, is_active, created_at`,
+      [name, modality, capacity, cost, is_active]
     );
 
-    if (result.rowCount === 0) return res.status(404).json({ message: 'Curso no encontrado' });
+    const newCourse = result.rows[0];
 
-    return res.status(200).json({ course: mapCourse(result.rows[0]) });
-  } catch (error) {
-    console.error('updateCourse error', error);
-    return res.status(500).json({ message: 'Error al actualizar curso' });
-  }
-};
+    return res.status(201).json({
+      message: 'Curso creado exitosamente',
+      course: {
+        id: newCourse.id,
+        name: newCourse.name,
+        modality: newCourse.modality,
+        capacity: newCourse.capacity,
+        cost: parseFloat(newCourse.cost),
+        is_active: newCourse.is_active,
+        created_at: newCourse.created_at
+      }
+    });
 
-// Eliminar
-export const deleteCourse = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await db.query('DELETE FROM Course WHERE id = $1 RETURNING id', [id]);
-    if (result.rowCount === 0) return res.status(404).json({ message: 'Curso no encontrado' });
-    return res.status(200).json({ message: 'Curso eliminado correctamente' });
   } catch (error) {
-    console.error('deleteCourse error', error);
-    return res.status(500).json({ message: 'Error al eliminar curso' });
+    console.error('Error al crear curso:', error);
+
+    // Error de tipo de dato inválido en PostgreSQL
+    if (error.code === '22P02') {
+      return res.status(400).json({
+        error: 'Datos inválidos',
+        message: 'Uno o más campos contienen datos en formato incorrecto'
+      });
+    }
+
+    // Error de violación de constraint (por si acaso)
+    if (error.code === '23505') {
+      return res.status(409).json({
+        error: 'Conflicto',
+        message: 'El curso ya existe en el sistema'
+      });
+    }
+
+    // Error genérico del servidor
+    return res.status(500).json({
+      error: 'Error interno del servidor',
+      message: 'Ocurrió un error al crear el curso'
+    });
+
   }
 };
