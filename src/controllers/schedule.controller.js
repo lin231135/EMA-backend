@@ -2,7 +2,7 @@
 import pool from '../db/connection.js';
 
 /**
- * POST /api/courses/schedules
+ * POST /api/schedules
  * Crea un nuevo horario (schedule) para un curso
  * El teacher_id se extrae del JWT del usuario autenticado
  */
@@ -135,6 +135,130 @@ export async function createSchedule(req, res) {
     return res.status(500).json({ 
       error: "Internal Server Error",
       message: "Ocurrió un error inesperado al crear el horario" 
+    });
+  }
+}
+
+/**
+ * GET /api/schedules
+ * Obtiene todos los horarios programados
+ * Incluye información del curso y del maestro
+ */
+export async function getAllSchedules(req, res) {
+  try {
+    // Consultar todos los schedules con información relacionada
+    const query = `
+      SELECT 
+        s.id,
+        s.course_id,
+        s.teacher_id,
+        s.schedule_date,
+        s.start_time,
+        s.end_time,
+        c.name as course_name,
+        u.name as teacher_name,
+        u.last_name as teacher_last_name
+      FROM Schedule s
+      INNER JOIN Course c ON c.id = s.course_id
+      INNER JOIN "User" u ON u.id = s.teacher_id
+      WHERE u.is_active = TRUE
+        AND s.schedule_date >= CURRENT_DATE + INTERVAL '1 day'
+    `;
+
+    const result = await pool.query(query);
+
+    // Transformar los datos al formato esperado por el frontend
+    const schedules = result.rows.map(row => ({
+      id: row.id,
+      courseId: row.course_id,
+      courseName: row.course_name,
+      teacherId: row.teacher_id,
+      teacherName: `${row.teacher_name} ${row.teacher_last_name}`.trim(),
+      scheduleDate: row.schedule_date,
+      startTime: row.start_time,
+      endTime: row.end_time
+    }));
+
+    // Retornar la lista de schedules
+    return res.status(200).json({
+      message: "Horarios obtenidos exitosamente",
+      count: schedules.length,
+      schedules
+    });
+
+  } catch (err) {
+    // Registrar el error completo en consola para debugging
+    console.error("getAllSchedules error:", err);
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "Ocurrió un error inesperado al obtener los horarios" 
+    });
+  }
+}
+
+/**
+ * GET /api/schedules/:courseId
+ * Obtiene todos los horarios de un curso específico
+ * Incluye información del curso y del maestro
+ */
+export async function getSchedulesByCourse(req, res) {
+  try {
+    // Extraer el courseId validado de los parámetros (ya validado por middleware Zod)
+    const { courseId } = req.params;
+
+    // Verificar que el curso existe
+    const courseCheck = await pool.query(
+      `SELECT * FROM Course WHERE id = $1 LIMIT 1`,
+      [courseId]
+    );
+    
+    if (courseCheck.rowCount === 0) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "El curso especificado no existe"
+      });
+    }
+
+    // Consultar todos los schedules del curso con información relacionada
+    const query = `
+      SELECT
+        id,
+        schedule_date,
+        start_time,
+        end_time
+      FROM Schedule
+      WHERE course_id = $1 
+        AND schedule_date >= CURRENT_DATE + INTERVAL '1 day'
+      ORDER BY schedule_date ASC, start_time ASC
+    `;
+
+    const result = await pool.query(query, [courseId]);
+
+    // Transformar los datos al formato esperado por el frontend
+    const schedules = result.rows.map(row => ({
+      id: row.id,
+      scheduleDate: row.schedule_date,
+      startTime: row.start_time,
+      endTime: row.end_time
+    }));
+
+    // Retornar información del curso y sus schedules
+    return res.status(200).json({
+      message: "Horarios del curso obtenidos exitosamente",
+      count: schedules.length,
+      schedules
+    });
+
+  } catch (err) {
+    // Registrar el error completo en consola para debugging
+    console.error("getSchedulesByCourse error:", err);
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "Ocurrió un error inesperado al obtener los horarios del curso" 
     });
   }
 }

@@ -48,3 +48,12 @@ export const createScheduleSchema = z.object({
     path: ["end_time"]
   })
 });
+
+/**
+ * Schema de validación para el parámetro courseId
+ */
+export const courseIdParamSchema = z.object({
+  params: z.object({
+    courseId: z.string().regex(/^\d+$/, "El ID del curso debe ser un número válido")
+  })
+});
