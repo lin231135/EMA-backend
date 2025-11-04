@@ -253,3 +253,209 @@ export async function getTeacherPerformance(req, res) {
     res.status(500).json({ error: 'Error al obtener rendimiento por maestro' });
   }
 }
+
+/**
+ * GET /api/admin/reports/courses/performance?from&to
+ * Rendimiento por curso: clases/horas, alumnos únicos, última clase.
+ */
+export async function getCoursePerformance(req, res) {
+  const { from, to } = req.query;
+  const where = [];
+  const params = [];
+  let i = 1;
+  
+  // Filtros opcionales de fecha
+  if (from) { where.push(`s.schedule_date >= $${i++}`); params.push(from); }
+  if (to)   { where.push(`s.schedule_date <= $${i++}`); params.push(to); }
+  const whereSQL = where.length ? `AND ${where.join(' AND ')}` : '';
+
+  try {
+    // Obtener estadísticas de rendimiento por curso
+    const q = `
+      SELECT
+        c.id AS course_id,
+        c.name AS course_name,
+        c.modality::text AS modality,
+        COUNT(*) FILTER (WHERE b.status='completada')::int AS classes_completed,
+        COALESCE(SUM(EXTRACT(EPOCH FROM (s.end_time - s.start_time))) FILTER (WHERE b.status='completada')/3600.0, 0) AS hours_completed,
+        COUNT(DISTINCT b.kid_id)::int AS unique_students,
+        MAX(s.schedule_date) AS last_class_date
+      FROM Booking b
+      JOIN Course c   ON c.id = b.course_id
+      JOIN Schedule s ON s.id = b.schedule_id
+      WHERE 1=1
+      ${whereSQL}
+      GROUP BY c.id, c.name, c.modality
+      ORDER BY classes_completed DESC, hours_completed DESC;
+    `;
+    const { rows } = await pool.query(q, params);
+    res.json({ items: rows });
+  } catch (err) {
+    console.error('getCoursePerformance', err);
+    res.status(500).json({ error: 'Error al obtener rendimiento por curso' });
+  }
+}
+
+/**
+ * GET /api/admin/reports/payments/summary?from&to
+ * Finanzas globales: total aceptado, por método, tendencia mensual.
+ */
+export async function getPaymentsSummary(req, res) {
+  const { from, to } = req.query;
+  const where = [];
+  const params = [];
+  let i = 1;
+  
+  // Filtros opcionales de fecha
+  if (from) { where.push(`p.payment_date >= $${i++}`); params.push(from); }
+  if (to)   { where.push(`p.payment_date <= $${i++}`); params.push(to); }
+  const whereSQL = where.length ? `AND ${where.join(' AND ')}` : '';
+
+  try {
+    // Query 1: Total de pagos aceptados
+    const totalQ = `
+      SELECT COALESCE(SUM(p.total),0) AS total
+      FROM Payment p
+      WHERE p.state = 'aceptado' ${whereSQL}
+    `;
+    
+    // Query 2: Total por método de pago
+    const byMethodQ = `
+      SELECT p.payment_method::text AS method, SUM(p.total) AS total
+      FROM Payment p
+      WHERE p.state = 'aceptado' ${whereSQL}
+      GROUP BY method
+      ORDER BY SUM(p.total) DESC
+    `;
+    
+    // Query 3: Tendencia mensual de pagos
+    const monthlyQ = `
+      SELECT to_char(date_trunc('month', p.payment_date), 'YYYY-MM') AS month,
+             SUM(p.total) AS total
+      FROM Payment p
+      WHERE p.state = 'aceptado' ${whereSQL}
+      GROUP BY month
+      ORDER BY month
+    `;
+
+    // Ejecutar las 3 queries en paralelo
+    const [tot, meth, mon] = await Promise.all([
+      pool.query(totalQ, params),
+      pool.query(byMethodQ, params),
+      pool.query(monthlyQ, params),
+    ]);
+
+    res.json({
+      totalAccepted: num(tot.rows?.[0]?.total),
+      byMethod: meth.rows,
+      monthly: mon.rows
+    });
+  } catch (err) {
+    console.error('getPaymentsSummary', err);
+    res.status(500).json({ error: 'Error al obtener resumen de pagos' });
+  }
+}
+
+/**
+ * GET /api/admin/reports/students/top?metric=hours|completed&limit=10&from&to
+ * Ranking de estudiantes por horas/completadas (en rango opcional).
+ */
+export async function getTopStudents(req, res) {
+  const { metric = 'hours', limit = 10, from, to } = req.query;
+  
+  // Determinar columna de ordenamiento según métrica
+  const orderCol = metric === 'completed' ? 'classes_completed' : 'hours_completed';
+
+  const where = [];
+  const params = [];
+  let i = 1;
+  
+  // Filtros opcionales de fecha
+  if (from) { where.push(`s.schedule_date >= $${i++}`); params.push(from); }
+  if (to)   { where.push(`s.schedule_date <= $${i++}`); params.push(to); }
+  const whereSQL = where.length ? `AND ${where.join(' AND ')}` : '';
+
+  try {
+    // Obtener ranking de estudiantes según métrica seleccionada
+    const q = `
+      SELECT
+        b.kid_id,
+        k.name AS kid_name,
+        COUNT(*) FILTER (WHERE b.status='completada')::int AS classes_completed,
+        COALESCE(SUM(EXTRACT(EPOCH FROM (s.end_time - s.start_time))) FILTER (WHERE b.status='completada')/3600.0, 0) AS hours_completed,
+        MAX(s.schedule_date) AS last_class_date
+      FROM Booking b
+      JOIN Kid k       ON k.id = b.kid_id
+      JOIN Schedule s  ON s.id = b.schedule_id
+      WHERE 1=1
+      ${whereSQL}
+      GROUP BY b.kid_id, k.name
+      ORDER BY ${orderCol} DESC
+      LIMIT ${Math.min(parseInt(limit,10)||10, 50)}
+    `;
+    const { rows } = await pool.query(q, params);
+    res.json({ metric: metric === 'completed' ? 'completed' : 'hours', items: rows });
+  } catch (err) {
+    console.error('getTopStudents', err);
+    res.status(500).json({ error: 'Error al obtener ranking de estudiantes' });
+  }
+}
+
+/**
+ * GET /api/admin/reports/students/at-risk?minMissed=2&minDebt=0
+ * “Riesgo”: alta cancelación/no completadas o adeudo estimado.
+ * - Missed = canceladas + programadas sin completar (proxy simple).
+ * - Adeudo = (valor completado) - (pagado aceptado) por kid.
+ */
+export async function getStudentsAtRisk(req, res) {
+  const minMissed = Math.max(parseInt(req.query.minMissed || '2',10), 0);
+  const minDebt   = Math.max(Number(req.query.minDebt || 0), 0);
+
+  try {
+    const q = `
+      WITH perf AS (
+        SELECT
+          b.kid_id,
+          COUNT(*) FILTER (WHERE b.status='completada')::int AS completed,
+          COUNT(*) FILTER (WHERE b.status='cancelada')::int  AS cancelled,
+          COUNT(*) FILTER (WHERE b.status='programada')::int AS scheduled,
+          COALESCE(SUM(c.cost) FILTER (WHERE b.status='completada'), 0)::numeric AS completed_value
+        FROM Booking b
+        JOIN Course c ON c.id = b.course_id
+        GROUP BY b.kid_id
+      ),
+      paid AS (
+        SELECT
+          pi.booking_id,
+          SUM(pi.subtotal) AS paid
+        FROM Payment_item pi
+        JOIN Payment p ON p.id = pi.payment_id
+        WHERE p.state = 'aceptado'
+        GROUP BY pi.booking_id
+      ),
+      paid_by_kid AS (
+        SELECT b.kid_id, COALESCE(SUM(paid.paid),0)::numeric AS paid_total
+        FROM Booking b
+        LEFT JOIN paid ON paid.booking_id = b.id
+        GROUP BY b.kid_id
+      )
+      SELECT
+        k.id AS kid_id,
+        k.name AS kid_name,
+        (perf.cancelled + perf.scheduled) AS missed,
+        perf.completed,
+        (perf.completed_value - pbk.paid_total) AS estimated_debt
+      FROM perf
+      JOIN paid_by_kid pbk ON pbk.kid_id = perf.kid_id
+      JOIN Kid k ON k.id = perf.kid_id
+      WHERE (perf.cancelled + perf.scheduled) >= $1
+         OR (perf.completed_value - pbk.paid_total) >= $2
+      ORDER BY estimated_debt DESC, missed DESC;
+    `;
+    const { rows } = await pool.query(q, [minMissed, minDebt]);
+    res.json({ minMissed, minDebt, items: rows });
+  } catch (err) {
+    console.error('getStudentsAtRisk', err);
+    res.status(500).json({ error: 'Error al obtener alumnos en riesgo' });
+  }
+}
