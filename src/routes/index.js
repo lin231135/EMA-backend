@@ -13,6 +13,7 @@ import joinTeam from './join.team.routes.js';
 import studentPaymentRoutes from './student/studentsPayments.routes.js';
 import uploadRoutes from './app/upload.routes.js';
 import scheduleRoutes from './courses/schedule.routes.js';
+import bookingsRoutes from './app/bookings.routes.js';
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/upload', uploadRoutes)  // /api/upload/* (ImageKit uploads)
 router.use('/students', studentRoutes);
 router.use('/students', studentPaymentRoutes); 
 router.use('/schedules', scheduleRoutes); // /api/schedules/*
+router.use('/bookings', bookingsRoutes); // /api/bookings/*
 
 export default router;
