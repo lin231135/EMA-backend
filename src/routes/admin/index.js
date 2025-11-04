@@ -13,6 +13,7 @@ import {
 import studentsRoutes from './students.routes.js';
 import paymentsRoutes from './payments.routes.js';
 import bookingsRoutes from './bookings.routes.js';
+import adminGlobalReports from './reports.global.routes.js';
 
 const router = Router();
 
@@ -38,12 +39,15 @@ router.get('/books/:id', getBook);
 router.put('/books/:id', updateBook);
 router.delete('/books/:id', deleteBook);
 
-/* Endpoints de reportes */
+/* Endpoints de reportes legacy */
 router.get('/reports/revenue', getRevenueReport);
 router.get('/reports/bookings', getBookingsReport);
 router.get('/reports/teachers-performance', getTeachersPerformanceReport);
 router.get('/reports/students-activity', getStudentsActivityReport);
 router.get('/reports/courses-popularity', getCoursesPopularityReport);
+
+/* Endpoints de KPIs globales del dashboard (montar al final para evitar conflictos) */
+router.use('/reports', adminGlobalReports);
 //router.get('/reports/pending-payments', getPendingPaymentsReport);
 
 export default router;
