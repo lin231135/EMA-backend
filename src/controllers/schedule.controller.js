@@ -1,82 +1,146 @@
-import db from '../db/connection.js';
+// src/controllers/schedule.controller.js
+import pool from '../db/connection.js';
 
-// Función helper para importar dinámicamente el servicio
-async function getNotificationService() {
+/**
+ * POST /api/courses/schedules
+ * Crea un nuevo horario (schedule) para un curso
+ * El teacher_id se extrae del JWT del usuario autenticado
+ */
+export async function createSchedule(req, res) {
   try {
-    const { default: notificationService } = await import('../services/notification.service.js');
-    return notificationService;
-  } catch (error) {
-    console.warn('Servicio de notificaciones no disponible:', error.message);
-    return null;
-  }
-}
-
-// Get the calendar (all scheduled classes)
-export const getCalendar = async (req, res) => {
-  try {
-    const result = await db.query(
-      `SELECT s.id, s.schedule_date, s.start_time, s.end_time,
-              c.name as course_name, u.name as teacher_name
-       FROM Schedule s
-       JOIN Course c ON c.id = s.course_id
-       JOIN "User" u ON u.id = s.teacher_id
-       ORDER BY s.schedule_date, s.start_time`
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error en getCalendar:', err);
-    res.status(500).json({ message: 'Error al obtener calendario' });
-  }
-};
-
-// Add a new class to the schedule
-export const addClass = async (req, res) => {
-  // TODO: Implement logic to add a class
-};
-
-// Cancel a booking and send notifications
-export const cancelBooking = async (req, res) => {
-  try {
-    const { bookingId } = req.params;
-    const { reason = 'Clase cancelada' } = req.body;
-
-    // Verificar que la reserva existe y está programada
-    const bookingResult = await db.query(
-      'SELECT * FROM Booking WHERE id = $1 AND status = $2',
-      [bookingId, 'programada']
-    );
-
-    if (bookingResult.rows.length === 0) {
-      return res.status(404).json({ 
-        message: 'Reserva no encontrada o ya está cancelada' 
+    // Extraer el ID del usuario autenticado desde el token JWT (agregado por middleware de autenticación)
+    const authUserId = req.user?.id;
+    
+    // Verificar que el usuario esté autenticado
+    if (!authUserId) {
+      return res.status(401).json({ 
+        error: "Unauthorized",
+        message: "Usuario no autenticado" 
       });
     }
 
-    // Cancelar la reserva
-    await db.query(
-      'UPDATE Booking SET status = $1 WHERE id = $2',
-      ['cancelada', bookingId]
-    );
+    // Extraer datos validados del body (ya validados por middleware Zod)
+    const { course_id, schedule_date, start_time, end_time } = req.body;
 
-    // Cancelar recordatorios y enviar notificación de cancelación
-    const notificationService = await getNotificationService();
-    if (notificationService) {
-      await notificationService.cancelClassReminders(bookingId, reason);
+    // 1. Verificar que el maestro existe, está activo y tiene el rol correcto
+    const teacherCheck = await pool.query(
+      `SELECT id, role FROM "User" WHERE id = $1 AND is_active = TRUE LIMIT 1`,
+      [authUserId]
+    );
+    
+    if (teacherCheck.rowCount === 0) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "El maestro no existe o no está activo"
+      });
     }
 
-    res.json({ 
-      message: 'Clase cancelada correctamente' + (notificationService ? ' y notificaciones enviadas' : ''),
-      booking_id: bookingId 
+    // Validar que el usuario tenga el rol de 'maestro'
+    if (teacherCheck.rows[0].role !== "maestro") {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Solo los maestros pueden crear horarios"
+      });
+    }
+
+    // 2. Verificar que el curso existe y está activo
+    const courseCheck = await pool.query(
+      `SELECT id, name FROM Course WHERE id = $1 LIMIT 1`,
+      [course_id]
+    );
+    
+    if (courseCheck.rowCount === 0) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "El curso especificado no existe"
+      });
+    }
+
+    // 3. Verificar que no exista un horario conflictivo para el mismo maestro
+    // (mismo día, horarios que se solapan)
+    const conflictCheck = await pool.query(
+      `SELECT id FROM Schedule 
+       WHERE teacher_id = $1 
+       AND schedule_date = $2 
+       AND (
+         (start_time <= $3 AND end_time > $3) OR  -- El nuevo horario empieza durante un horario existente
+         (start_time < $4 AND end_time >= $4) OR  -- El nuevo horario termina durante un horario existente
+         (start_time >= $3 AND end_time <= $4)    -- El nuevo horario engloba un horario existente
+       )
+       LIMIT 1`,
+      [authUserId, schedule_date, start_time, end_time]
+    );
+    
+    if (conflictCheck.rowCount > 0) {
+      return res.status(409).json({
+        error: "Conflict",
+        message: "Ya existe un horario programado para este maestro en el mismo día y rango de horas"
+      });
+    }
+
+    // 4. Insertar el nuevo schedule en la base de datos
+    const insertQuery = `
+      INSERT INTO Schedule (course_id, teacher_id, schedule_date, start_time, end_time)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, course_id, teacher_id, schedule_date, start_time, end_time, created_at
+    `;
+
+    const result = await pool.query(insertQuery, [
+      course_id,
+      authUserId,
+      schedule_date,
+      start_time,
+      end_time
+    ]);
+
+    // Obtener el horario recién creado
+    const newSchedule = result.rows[0];
+
+    // 5. Retornar el schedule creado (201 Created)
+    return res.status(201).json({
+      message: "Horario creado exitosamente",
+      schedule: {
+        id: newSchedule.id,
+        courseId: newSchedule.course_id,
+        courseName: courseCheck.rows[0].name,
+        teacherId: newSchedule.teacher_id,
+        scheduleDate: newSchedule.schedule_date,
+        startTime: newSchedule.start_time,
+        endTime: newSchedule.end_time,
+        createdAt: newSchedule.created_at
+      }
     });
 
   } catch (err) {
-    console.error('Error en cancelBooking:', err);
-    res.status(500).json({ message: 'Error al cancelar la clase' });
+    // Registrar el error completo en consola para debugging
+    console.error("createSchedule error:", err);
+    
+    // Errores de violación de constraint de base de datos (23xxx en PostgreSQL)
+    if (err.code && err.code.startsWith('23')) {
+      // 23503 = foreign_key_violation
+      if (err.code === '23503') {
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Referencia inválida: el curso o maestro especificado no existe"
+        });
+      }
+      
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Error de validación en la base de datos"
+      });
+    }
+    
+    // Error genérico del servidor (500 Internal Server Error)
+    return res.status(500).json({ 
+      error: "Internal Server Error",
+      message: "Ocurrió un error inesperado al crear el horario" 
+    });
   }
-};
+}
 
-// GET /calendar/bookings/:bookingId/feedback
+// ---------- IGNORAR ----------
+
 export const getClassFeedback = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -100,4 +164,28 @@ export const getClassFeedback = async (req, res) => {
 // Add feedback for a specific class
 export const addClassFeedback = async (req, res) => {
   // TODO: Implement logic to add class feedback
+};
+
+// Get the calendar (all scheduled classes)
+export const getCalendar = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT s.id, s.schedule_date, s.start_time, s.end_time,
+              c.name as course_name, u.name as teacher_name
+       FROM Schedule s
+       JOIN Course c ON c.id = s.course_id
+       JOIN "User" u ON u.id = s.teacher_id
+       ORDER BY s.schedule_date, s.start_time`
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error en getCalendar:', err);
+    res.status(500).json({ message: 'Error al obtener calendario' });
+  }
+};
+
+// Add a new class to the schedule
+export const addClass = async (req, res) => {
+  // TODO: Implement logic to add a class
 };

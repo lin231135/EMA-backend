@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 import userRoutes from './users.routes.js';
-import courseRoutes from './courses.routes.js';
+import courseRoutes from './courses/courses.routes.js';
 import studentRoutes from './student/students.routes.js';
 import parentRoutes from './parents.routes.js';
 import teacherRoutes from './teachers.routes.js';
@@ -12,6 +12,7 @@ import parentsRoutes from "./parent/parents.routes.js";
 import joinTeam from './join.team.routes.js';
 import studentPaymentRoutes from './student/studentsPayments.routes.js';
 import uploadRoutes from './app/upload.routes.js';
+import scheduleRoutes from './courses/schedule.routes.js';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/join-team', joinTeam)  // /api/join-team/*
 router.use('/upload', uploadRoutes)  // /api/upload/* (ImageKit uploads)
 router.use('/students', studentRoutes);
 router.use('/students', studentPaymentRoutes); 
+router.use('/schedules', scheduleRoutes); // /api/schedules/*
 
 export default router;
