@@ -2,7 +2,7 @@
 
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
-import { pool } from '../db/index.js';
+import pool from '../../db/connection.js';
 
 // ================= CONFIGURACIÓN DE CLOUDINARY =================
 cloudinary.config({
