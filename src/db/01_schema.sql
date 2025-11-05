@@ -203,4 +203,58 @@ COMMENT ON TABLE whatsapp_users IS 'Usuarios que interactúan con el bot de What
 COMMENT ON TABLE whatsapp_interactions IS 'Historial de todas las interacciones con el bot';
 COMMENT ON COLUMN whatsapp_users.language IS 'Idioma preferido: es (español) o en (inglés)';
 
+-- ======================== TRIGGERS ==========================================
+
+-- Función que crea un Payment automáticamente cuando se crea un Booking
+CREATE OR REPLACE FUNCTION create_payment_for_booking()
+RETURNS TRIGGER AS $$
+DECLARE
+  course_cost DECIMAL(10,2);
+  new_payment_id INT;
+BEGIN
+  -- Obtener el costo del curso
+  SELECT cost INTO course_cost
+  FROM Course
+  WHERE id = NEW.course_id;
+  
+  -- Crear el Payment con estado 'pendiente'
+  INSERT INTO Payment (
+    user_id,
+    payment_method,
+    total,
+    state,
+    note
+  ) VALUES (
+    NEW.user_id,
+    'efectivo',  -- Método de pago por defecto
+    course_cost,
+    'pendiente',  -- Estado inicial
+    'Pago generado automáticamente para booking #' || NEW.id
+  )
+  RETURNING id INTO new_payment_id;
+  
+  -- Crear el Payment_item asociando el booking con el payment
+  INSERT INTO Payment_item (
+    payment_id,
+    booking_id,
+    unit_cost,
+    subtotal
+  ) VALUES (
+    new_payment_id,
+    NEW.id,
+    course_cost,
+    course_cost
+  );
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger que ejecuta la función después de insertar un Booking
+DROP TRIGGER IF EXISTS trigger_create_payment_after_booking ON Booking;
+CREATE TRIGGER trigger_create_payment_after_booking
+  AFTER INSERT ON Booking
+  FOR EACH ROW
+  EXECUTE FUNCTION create_payment_for_booking();
+
 COMMIT;
