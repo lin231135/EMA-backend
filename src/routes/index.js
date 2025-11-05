@@ -26,6 +26,7 @@ router.use('/students', studentRoutes)  // /api/students/*
 router.use('/parents', parentRoutes)  // /api/parents/* (dashboard, calendar, payments, etc.)
 router.use('/parents', parentsRoutes)  // /api/parents/* (children, profiles)
 router.use('/teachers', teacherRoutes)  // /api/teachers/*
+router.use('/teacher', teacherRoutes);
 router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/contact', contact)  // /api/contact/*
