@@ -138,3 +138,29 @@ export const updateMaterial = async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar material.' });
   }
 };
+
+
+// ================= DELETE MATERIAL =================
+export const deleteMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener el material para eliminar de Cloudinary
+    const result = await pool.query('SELECT * FROM Material WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Material no encontrado.' });
+    }
+
+    const material = result.rows[0];
+    await cloudinary.uploader.destroy(material.public_id, { resource_type: material.file_type });
+
+    // Eliminar de la base de datos
+    await pool.query('DELETE FROM Material WHERE id = $1', [id]);
+
+    res.json({ message: 'Material eliminado correctamente.' });
+  } catch (error) {
+    console.error('Error al eliminar material:', error);
+    res.status(500).json({ error: 'Error al eliminar material.' });
+  }
+};
+
