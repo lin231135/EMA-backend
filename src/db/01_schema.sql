@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "User" (
   password VARCHAR(255) NOT NULL,
   role role NOT NULL,
   description TEXT,
+  profile_image VARCHAR(500),
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

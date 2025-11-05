@@ -25,7 +25,7 @@ export const login = async (req, res) => {
     // La búsqueda es case-insensitive usando LOWER() para mejor UX
     // Esto aprovecha el índice creado en LOWER(email) para optimizar la consulta
     const result = await db.query(
-      `SELECT id, name, last_name, email, phone, password, role, is_active
+      `SELECT id, name, last_name, email, phone, password, role, is_active, profile_image
        FROM "User"
        WHERE LOWER(email) = LOWER($1)`,
       [email]
@@ -72,7 +72,8 @@ export const login = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
-        is_active: user.is_active
+        is_active: user.is_active,
+        profile_image: user.profile_image
       }
     });
   } catch (error) {
@@ -241,7 +242,7 @@ export const refresh = async (req, res) => {
     // Consultar la información actualizada del usuario desde la base de datos
     // Esto asegura que el usuario aún existe y sigue activo
     const result = await db.query(
-      `SELECT id, name, last_name, email, phone, role, is_active
+      `SELECT id, name, last_name, email, phone, role, is_active, profile_image
          FROM "User"
         WHERE id = $1
         LIMIT 1`,
@@ -275,7 +276,8 @@ export const refresh = async (req, res) => {
         email: u.email,
         phone: u.phone,
         role: u.role,
-        is_active: u.is_active
+        is_active: u.is_active,
+        profile_image: u.profile_image
       }
     });
   } catch (e) {

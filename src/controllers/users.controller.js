@@ -1,4 +1,5 @@
 import pool from '../db/connection.js';
+import imagekit from '../config/imagekit.js';
 
 const mapUser = (row) => ({
   id: row.id,
@@ -9,6 +10,7 @@ const mapUser = (row) => ({
   role: row.role,
   description: row.description,
   is_active: row.is_active,
+  profile_image: row.profile_image, 
 });
 
 export const updateUser = async (req, res) => {
@@ -39,7 +41,7 @@ export const updateUser = async (req, res) => {
     values.push(id);
 
     const result = await pool.query(
-      `UPDATE "User" SET ${fields.join(', ')} WHERE id = $${idx} RETURNING id, name, last_name, email, phone, role, description, is_active`,
+      `UPDATE "User" SET ${fields.join(', ')} WHERE id = $${idx} RETURNING id, name, last_name, email, phone, role, description, is_active, profile_image`,
       values
     );
 
@@ -59,7 +61,7 @@ export const setActive = (active) => async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE "User" SET is_active = $1 WHERE id = $2 RETURNING id, name, last_name, email, phone, role, description, is_active`,
+      `UPDATE "User" SET is_active = $1 WHERE id = $2 RETURNING id, name, last_name, email, phone, role, description, is_active, profile_image`,
       [active, id]
     );
 
@@ -82,7 +84,7 @@ export const setActive = (active) => async (req, res) => {
 export const getProfileInfo = async (req, res) => {
   try {
     const userResult = await pool.query(
-      'SELECT id, name, last_name, role, email, phone, is_active FROM "User" WHERE id = $1',
+      'SELECT id, name, last_name, role, email, phone, is_active, profile_image FROM "User" WHERE id = $1',
       [req.user.id]
     );
     if (userResult.rowCount === 0) {
@@ -128,7 +130,7 @@ export const updateProfileInfo = async (req, res) => {
       UPDATE "User"
       SET ${fields.join(', ')}
       WHERE id = $${i}
-      RETURNING id, name, last_name, role, email, phone, is_active
+      RETURNING id, name, last_name, role, email, phone, is_active, profile_image
     `;
     const result = await pool.query(sql, values);
 
@@ -136,6 +138,117 @@ export const updateProfileInfo = async (req, res) => {
   } catch (error) {
     console.error('updateProfileInfo error', error);
     return res.status(500).json({ message: 'Error al actualizar perfil' });
+  }
+};
+
+// Upload/Update profile image
+export const uploadProfileImage = async (req, res) => {
+  try {
+    const { file } = req.body; // Base64 encoded image
+    
+    if (!file) {
+      return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
+    }
+
+    // Get current user to check if they have an existing image
+    const userResult = await pool.query(
+      'SELECT profile_image FROM "User" WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    const currentImage = userResult.rows[0].profile_image;
+
+    // Delete old image from ImageKit if exists
+    if (currentImage) {
+      try {
+        // Extract fileId from URL
+        const urlParts = currentImage.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const fileIdWithExt = fileName.split('?')[0]; // Remove query params if any
+        const fileId = fileIdWithExt.substring(0, fileIdWithExt.lastIndexOf('.')) || fileIdWithExt;
+        
+        await imagekit.deleteFile(fileId);
+      } catch (deleteError) {
+        console.error('Error deleting old image:', deleteError);
+        // Continue even if delete fails
+      }
+    }
+
+    // Upload new image to ImageKit
+    const uploadResponse = await imagekit.upload({
+      file: file, // Base64 string
+      fileName: `profile_${req.user.id}_${Date.now()}`,
+      folder: '/profiles',
+      useUniqueFileName: true,
+      tags: [`user_${req.user.id}`, 'profile']
+    });
+
+    // Update user profile_image in database
+    const updateResult = await pool.query(
+      'UPDATE "User" SET profile_image = $1 WHERE id = $2 RETURNING id, name, last_name, role, email, phone, is_active, profile_image',
+      [uploadResponse.url, req.user.id]
+    );
+
+    return res.status(200).json({
+      user: mapUser(updateResult.rows[0]),
+      imageUrl: uploadResponse.url
+    });
+  } catch (error) {
+    console.error('uploadProfileImage error', error);
+    return res.status(500).json({ 
+      message: 'Error al subir imagen de perfil',
+      error: error.message 
+    });
+  }
+};
+
+// Delete profile image
+export const deleteProfileImage = async (req, res) => {
+  try {
+    const userResult = await pool.query(
+      'SELECT profile_image FROM "User" WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    const currentImage = userResult.rows[0].profile_image;
+
+    if (!currentImage) {
+      return res.status(400).json({ message: 'No hay imagen de perfil para eliminar' });
+    }
+
+    // Delete from ImageKit
+    try {
+      const urlParts = currentImage.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      const fileIdWithExt = fileName.split('?')[0];
+      const fileId = fileIdWithExt.substring(0, fileIdWithExt.lastIndexOf('.')) || fileIdWithExt;
+      
+      await imagekit.deleteFile(fileId);
+    } catch (deleteError) {
+      console.error('Error deleting from ImageKit:', deleteError);
+    }
+
+    // Update database
+    const updateResult = await pool.query(
+      'UPDATE "User" SET profile_image = NULL WHERE id = $1 RETURNING id, name, last_name, role, email, phone, is_active, profile_image',
+      [req.user.id]
+    );
+
+    return res.status(200).json({
+      user: mapUser(updateResult.rows[0]),
+      message: 'Imagen de perfil eliminada correctamente'
+    });
+  } catch (error) {
+    console.error('deleteProfileImage error', error);
+    return res.status(500).json({ message: 'Error al eliminar imagen de perfil' });
   }
 };
 
@@ -159,7 +272,6 @@ export const createAddress = async (req, res) => {
 
   const client = await pool.connect();
   try {
-    // Usa pool si existe, si no usa db.query directamente
     const q = client ? client.query.bind(client) : pool.query.bind(pool);
 
     if (client) await q('BEGIN');
@@ -315,7 +427,7 @@ export const addUser = async (req, res) => {
     const result = await pool.query(
       `INSERT INTO "User" (name, last_name, email, phone, role, description, is_active)
         VALUES ($1, $2, $3, $4, $5, $6, TRUE)
-        RETURNING id, name, last_name, email, phone, role, description, is_active`,
+        RETURNING id, name, last_name, email, phone, role, description, is_active, profile_image`,
       [name, last_name, email, phone, role, description || null]
     );
     return res.status(201).json({ user: mapUser(result.rows[0]) });
@@ -330,7 +442,7 @@ export const getUsers = async (req, res) => {
   try {
     const { role } = req.query;
     
-    let query = `SELECT id, name, last_name, email, phone, role, description, is_active FROM "User"`;
+    let query = `SELECT id, name, last_name, email, phone, role, description, is_active, profile_image FROM "User"`;
     const params = [];
     
     // Filtrar por rol si se proporciona
@@ -354,7 +466,7 @@ export const getUser = async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
-      `SELECT id, name, last_name, email, phone, role, description, is_active FROM "User" WHERE id = $1`,
+      `SELECT id, name, last_name, email, phone, role, description, is_active, profile_image FROM "User" WHERE id = $1`,
       [id]
     );
     if (result.rowCount === 0) {
@@ -367,7 +479,6 @@ export const getUser = async (req, res) => {
   }
 };
 
-
 // Delete a user by ID
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
@@ -376,7 +487,7 @@ export const deleteUser = async (req, res) => {
   }
   try {
     const result = await pool.query(
-      `DELETE FROM "User" WHERE id = $1 RETURNING id, name, last_name, email, phone, role, description, is_active`,
+      `DELETE FROM "User" WHERE id = $1 RETURNING id, name, last_name, email, phone, role, description, is_active, profile_image`,
       [id]
     );
     if (result.rowCount === 0) {
@@ -388,4 +499,3 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: 'Error al eliminar usuario' });
   }
 };
-

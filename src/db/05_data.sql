@@ -7,85 +7,98 @@ BEGIN;
 
 -- ======================== USUARIOS (56 registros) =========================
 -- Administradores, maestros, padres y estudiantes adultos
-INSERT INTO "User" (name, last_name, email, phone, password, role, description, is_active) VALUES
+INSERT INTO "User" (name, last_name, email, phone, password, role, description, profile_image, is_active) VALUES
 
 -- Super usuario
-('Ellie', 'Delgado', 'sup@elliesmusic.com', '+502-1243-1546', crypt('Password1', gen_salt('bf', 12)), 'admin', null, true),
+('Ellie', 'Delgado', 'sup@elliesmusic.com', '+502-1243-1546', crypt('Password1', gen_salt('bf', 12)), 'admin', null, null, true),
 
 -- Administradores (5)
-('María', 'García', 'admin1@elliesmusic.com', '+502-1245-4512', crypt('Password2', gen_salt('bf', 12)), 'admin', null, true),
-('Carlos', 'López', 'admin2@elliesmusic.com', '+502-8978-4516', crypt('Password3', gen_salt('bf', 12)), 'admin', null, true),
-('Ana', 'Rodríguez', 'admin3@elliesmusic.com', '+502-1459-2789', crypt('Password4', gen_salt('bf', 12)), 'admin', null, true),
-('Pedro', 'Martínez', 'admin4@elliesmusic.com', '+502-1625-3978', crypt('Password5', gen_salt('bf', 12)), 'admin', null, true),
-('Laura', 'Hernández', 'admin5@elliesmusic.com', '+502-1526-4253', crypt('Password6', gen_salt('bf', 12)), 'admin', null, true),
+('María', 'García', 'admin1@elliesmusic.com', '+502-1245-4512', crypt('Password2', gen_salt('bf', 12)), 'admin', null, null, true),
+('Carlos', 'López', 'admin2@elliesmusic.com', '+502-8978-4516', crypt('Password3', gen_salt('bf', 12)), 'admin', null, null, true),
+('Ana', 'Rodríguez', 'admin3@elliesmusic.com', '+502-1459-2789', crypt('Password4', gen_salt('bf', 12)), 'admin', null, null, true),
+('Pedro', 'Martínez', 'admin4@elliesmusic.com', '+502-1625-3978', crypt('Password5', gen_salt('bf', 12)), 'admin', null, null, true),
+('Laura', 'Hernández', 'admin5@elliesmusic.com', '+502-1526-4253', crypt('Password6', gen_salt('bf', 12)), 'admin', null, null, true),
 
 -- Maestros (20)
-('Ellie', 'Delgado', 'ellie@maestra.com', '+502-1243-1546', crypt('Password1', gen_salt('bf', 12)), 'maestro', null, true),
-('Miguel', 'Ángel', 'miguel.angel@elliesmusic.com', '+52-55-1234-5683', crypt('Password7', gen_salt('bf', 12)), 'maestro', 'Pianista concertista con 15 años de experiencia', true),
-('Sofía', 'Castillo', 'sofia.castillo@elliesmusic.com', '+52-55-1234-5684', crypt('Password8', gen_salt('bf', 12)), 'maestro', 'Guitarrista profesional, especialista en flamenco', true),
-('Ricardo', 'Fernández', 'ricardo.fernandez@elliesmusic.com', '+52-55-1234-5685', crypt('Password9', gen_salt('bf', 12)), 'maestro', 'Violinista de orquesta sinfónica', true),
-('Elena', 'Morales', 'elena.morales@elliesmusic.com', '+52-55-1234-5686', crypt('Password10', gen_salt('bf', 12)), 'maestro', 'Cantante lírica y profesora de técnica vocal', true),
-('Javier', 'Ramírez', 'javier.ramirez@elliesmusic.com', '+52-55-1234-5687', crypt('Password11', gen_salt('bf', 12)), 'maestro', 'Baterista de jazz y rock', true),
-('Carmen', 'Vega', 'carmen.vega@elliesmusic.com', '+52-55-1234-5688', crypt('Password12', gen_salt('bf', 12)), 'maestro', 'Cellista con maestría en música clásica', true),
-('Diego', 'Santos', 'diego.santos@elliesmusic.com', '+52-55-1234-5689', crypt('Password13', gen_salt('bf', 12)), 'maestro', 'Saxofonista especialista en música contemporánea', true),
-('Isabel', 'Cruz', 'isabel.cruz@elliesmusic.com', '+52-55-1234-5690', crypt('Password14', gen_salt('bf', 12)), 'maestro', 'Flautista con experiencia en orquestas', true),
-('Fernando', 'Ortega', 'fernando.ortega@elliesmusic.com', '+52-55-1234-5691', crypt('Password15', gen_salt('bf', 12)), 'maestro', 'Trompetista y arreglista musical', true),
-('Patricia', 'Reyes', 'patricia.reyes@elliesmusic.com', '+52-55-1234-5692', crypt('Password16', gen_salt('bf', 12)), 'maestro', 'Arpista y compositora', true),
-('Roberto', 'Mendoza', 'roberto.mendoza@elliesmusic.com', '+52-55-1234-5693', crypt('Password17', gen_salt('bf', 12)), 'maestro', 'Bajista eléctrico especialista en funk', true),
-('Adriana', 'Guerrero', 'adriana.guerrero@elliesmusic.com', '+52-55-1234-5694', crypt('Password18', gen_salt('bf', 12)), 'maestro', 'Pianista especialista en jazz', true),
-('Oscar', 'Paredes', 'oscar.paredes@elliesmusic.com', '+52-55-1234-5695', crypt('Password19', gen_salt('bf', 12)), 'maestro', 'Guitarrista clásico', true),
-('Gabriela', 'Silva', 'gabriela.silva@elliesmusic.com', '+52-55-1234-5696', crypt('Password20', gen_salt('bf', 12)), 'maestro', 'Violinista especialista en música tradicional', true),
-('Héctor', 'Cervantes', 'hector.cervantes@elliesmusic.com', '+52-55-1234-5697', crypt('Password21', gen_salt('bf', 12)), 'maestro', 'Percusionista latino', true),
-('Lucía', 'Moreno', 'lucia.moreno@elliesmusic.com', '+52-55-1234-5698', crypt('Password22', gen_salt('bf', 12)), 'maestro', 'Tecladista y productora musical', true),
-('Raúl', 'Jiménez', 'raul.jimenez@elliesmusic.com', '+52-55-1234-5699', crypt('Password23', gen_salt('bf', 12)), 'maestro', 'Clarinetista de música clásica', true),
-('Verónica', 'Navarro', 'veronica.navarro@elliesmusic.com', '+52-55-1234-5700', crypt('Password24', gen_salt('bf', 12)), 'maestro', 'Cantante de música popular', true),
-('Antonio', 'Ríos', 'antonio.rios@elliesmusic.com', '+52-55-1234-5701', crypt('Password25', gen_salt('bf', 12)), 'maestro', 'Guitarrista eléctrico rock/metal', true),
-('Daniela', 'Acosta', 'daniela.acosta@elliesmusic.com', '+52-55-1234-5702', crypt('Password26', gen_salt('bf', 12)), 'maestro', 'Pianista para niños y principiantes', true),
+('Miguel', 'Ángel', 'miguel.angel@elliesmusic.com', '+52-55-1234-5683', crypt('Password7', gen_salt('bf', 12)), 'maestro', 'Pianista concertista con 15 años de experiencia', null, true),
+('Sofía', 'Castillo', 'sofia.castillo@elliesmusic.com', '+52-55-1234-5684', crypt('Password8', gen_salt('bf', 12)), 'maestro', 'Guitarrista profesional, especialista en flamenco', null, true),
+('Ricardo', 'Fernández', 'ricardo.fernandez@elliesmusic.com', '+52-55-1234-5685', crypt('Password9', gen_salt('bf', 12)), 'maestro', 'Violinista de orquesta sinfónica', null, true),
+('Elena', 'Morales', 'elena.morales@elliesmusic.com', '+52-55-1234-5686', crypt('Password10', gen_salt('bf', 12)), 'maestro', 'Cantante lírica y profesora de técnica vocal', null, true),
+('Javier', 'Ramírez', 'javier.ramirez@elliesmusic.com', '+52-55-1234-5687', crypt('Password11', gen_salt('bf', 12)), 'maestro', 'Baterista de jazz y rock', null, true),
+('Carmen', 'Vega', 'carmen.vega@elliesmusic.com', '+52-55-1234-5688', crypt('Password12', gen_salt('bf', 12)), 'maestro', 'Cellista con maestría en música clásica', null, true),
+('Diego', 'Santos', 'diego.santos@elliesmusic.com', '+52-55-1234-5689', crypt('Password13', gen_salt('bf', 12)), 'maestro', 'Saxofonista especialista en música contemporánea', null, true),
+('Isabel', 'Cruz', 'isabel.cruz@elliesmusic.com', '+52-55-1234-5690', crypt('Password14', gen_salt('bf', 12)), 'maestro', 'Flautista con experiencia en orquestas', null, true),
+('Fernando', 'Ortega', 'fernando.ortega@elliesmusic.com', '+52-55-1234-5691', crypt('Password15', gen_salt('bf', 12)), 'maestro', 'Trompetista y arreglista musical', null, true),
+('Patricia', 'Reyes', 'patricia.reyes@elliesmusic.com', '+52-55-1234-5692', crypt('Password16', gen_salt('bf', 12)), 'maestro', 'Arpista y compositora', null, true),
+('Roberto', 'Mendoza', 'roberto.mendoza@elliesmusic.com', '+52-55-1234-5693', crypt('Password17', gen_salt('bf', 12)), 'maestro', 'Bajista eléctrico especialista en funk', null, true),
+('Adriana', 'Guerrero', 'adriana.guerrero@elliesmusic.com', '+52-55-1234-5694', crypt('Password18', gen_salt('bf', 12)), 'maestro', 'Pianista especialista en jazz', null, true),
+('Oscar', 'Paredes', 'oscar.paredes@elliesmusic.com', '+52-55-1234-5695', crypt('Password19', gen_salt('bf', 12)), 'maestro', 'Guitarrista clásico', null, true),
+('Gabriela', 'Silva', 'gabriela.silva@elliesmusic.com', '+52-55-1234-5696', crypt('Password20', gen_salt('bf', 12)), 'maestro', 'Violinista especialista en música tradicional', null, true),
+('Héctor', 'Cervantes', 'hector.cervantes@elliesmusic.com', '+52-55-1234-5697', crypt('Password21', gen_salt('bf', 12)), 'maestro', 'Percusionista latino', null, true),
+('Lucía', 'Moreno', 'lucia.moreno@elliesmusic.com', '+52-55-1234-5698', crypt('Password22', gen_salt('bf', 12)), 'maestro', 'Tecladista y productora musical', null, true),
+('Raúl', 'Jiménez', 'raul.jimenez@elliesmusic.com', '+52-55-1234-5699', crypt('Password23', gen_salt('bf', 12)), 'maestro', 'Clarinetista de música clásica', null, true),
+('Verónica', 'Navarro', 'veronica.navarro@elliesmusic.com', '+52-55-1234-5700', crypt('Password24', gen_salt('bf', 12)), 'maestro', 'Cantante de música popular', null, true),
+('Antonio', 'Ríos', 'antonio.rios@elliesmusic.com', '+52-55-1234-5701', crypt('Password25', gen_salt('bf', 12)), 'maestro', 'Guitarrista eléctrico rock/metal', null, true),
+('Daniela', 'Acosta', 'daniela.acosta@elliesmusic.com', '+52-55-1234-5702', crypt('Password26', gen_salt('bf', 12)), 'maestro', 'Pianista para niños y principiantes', null, true),
 
 -- Padres/Estudiantes adultos (30) - Algunos también son estudiantes
--- ids del 28 al 57
-('Juan', 'Pérez', 'juan.perez@gmail.com', '+52-55-2234-1001', crypt('Password27', gen_salt('bf', 12)), 'padre', NULL, true),
-('María', 'González', 'maria.gonzalez@gmail.com', '+52-55-2234-1002', crypt('Password28', gen_salt('bf', 12)), 'padre', NULL, true),
-('Carlos', 'Díaz', 'carlos.diaz@gmail.com', '+52-55-2234-1003', crypt('Password29', gen_salt('bf', 12)), 'padre', NULL, true),
-('Ana', 'Torres', 'ana.torres@gmail.com', '+52-55-2234-1004', crypt('Password30', gen_salt('bf', 12)), 'padre', NULL, true),
-('Luis', 'Serrano', 'luis.serrano@gmail.com', '+52-55-2234-1005', crypt('Password31', gen_salt('bf', 12)), 'padre', NULL, true),
-('Elena', 'Romero', 'elena.romero@gmail.com', '+52-55-2234-1006', crypt('Password32', gen_salt('bf', 12)), 'padre', NULL, true),
-('Jorge', 'Alvarez', 'jorge.alvarez@gmail.com', '+52-55-2234-1007', crypt('Password33', gen_salt('bf', 12)), 'padre', NULL, true),
-('Sandra', 'Méndez', 'sandra.mendez@gmail.com', '+52-55-2234-1008', crypt('Password34', gen_salt('bf', 12)), 'padre', NULL, true),
-('Francisco', 'Castro', 'francisco.castro@gmail.com', '+52-55-2234-1009', crypt('Password35', gen_salt('bf', 12)), 'padre', NULL, true),
-('Gabriela', 'Ortiz', 'gabriela.ortiz@gmail.com', '+52-55-2234-1010', crypt('Password36', gen_salt('bf', 12)), 'padre', NULL, true),
-('Miguel', 'Ruiz', 'miguel.ruiz@gmail.com', '+52-55-2234-1011', crypt('Password37', gen_salt('bf', 12)), 'padre', NULL, true),
-('Patricia', 'Herrera', 'patricia.herrera@gmail.com', '+52-55-2234-1012', crypt('Password38', gen_salt('bf', 12)), 'padre', NULL, true),
-('Roberto', 'Flores', 'roberto.flores@gmail.com', '+52-55-2234-1013', crypt('Password39', gen_salt('bf', 12)), 'padre', NULL, true),
-('Claudia', 'Vargas', 'claudia.vargas@gmail.com', '+52-55-2234-1014', crypt('Password40', gen_salt('bf', 12)), 'padre', NULL, true),
-('Andrés', 'Rojas', 'andres.rojas@gmail.com', '+52-55-2234-1015', crypt('Password41', gen_salt('bf', 12)), 'padre', NULL, true),
-('Laura', 'Medina', 'laura.medina@gmail.com', '+52-55-2234-1016', crypt('Password42', gen_salt('bf', 12)), 'padre', NULL, true),
-('José', 'Campos', 'jose.campos@gmail.com', '+52-55-2234-1017', crypt('Password43', gen_salt('bf', 12)), 'padre', NULL, true),
-('Diana', 'Soto', 'diana.soto@gmail.com', '+52-55-2234-1018', crypt('Password44', gen_salt('bf', 12)), 'padre', NULL, true),
-('Fernando', 'Contreras', 'fernando.contreras@gmail.com', '+52-55-2234-1019', crypt('Password45', gen_salt('bf', 12)), 'padre', NULL, true),
-('Alejandra', 'Lara', 'alejandra.lara@gmail.com', '+52-55-2234-1020', crypt('Password46', gen_salt('bf', 12)), 'padre', NULL, true),
-('Ricardo', 'Miranda', 'ricardo.miranda@gmail.com', '+52-55-2234-1021', crypt('Password47', gen_salt('bf', 12)), 'padre', NULL, true),
-('Silvia', 'Peña', 'silvia.pena@gmail.com', '+52-55-2234-1022', crypt('Password48', gen_salt('bf', 12)), 'padre', NULL, true),
-('Martín', 'Cortés', 'martin.cortes@gmail.com', '+52-55-2234-1023', crypt('Password49', gen_salt('bf', 12)), 'padre', NULL, true),
-('Verónica', 'Núñez', 'veronica.nunez@gmail.com', '+52-55-2234-1024', crypt('Password50', gen_salt('bf', 12)), 'padre', NULL, true),
-('Rodrigo', 'Salazar', 'rodrigo.salazar@gmail.com', '+52-55-2234-1025', crypt('Password51', gen_salt('bf', 12)), 'padre', NULL, true),
-('Paola', 'Delgado', 'paola.delgado@gmail.com', '+52-55-2234-1026', crypt('Password52', gen_salt('bf', 12)), 'padre', NULL, true),
-('Sergio', 'Molina', 'sergio.molina@gmail.com', '+52-55-2234-1027', crypt('Password53', gen_salt('bf', 12)), 'padre', NULL, true),
-('Daniela', 'Carrillo', 'daniela.carrillo@gmail.com', '+52-55-2234-1028', crypt('Password54', gen_salt('bf', 12)), 'padre', NULL, true),
-('Arturo', 'Rangel', 'arturo.rangel@gmail.com', '+52-55-2234-1029', crypt('Password55', gen_salt('bf', 12)), 'padre', NULL, true),
-('Marisol', 'Barrera', 'marisol.barrera@gmail.com', '+52-55-2234-1030', crypt('Password56', gen_salt('bf', 12)), 'padre', NULL, true);
+-- ids del 27 al 56
+('Juan', 'Pérez', 'juan.perez@gmail.com', '+52-55-2234-1001', crypt('Password27', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('María', 'González', 'maria.gonzalez@gmail.com', '+52-55-2234-1002', crypt('Password28', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Carlos', 'Díaz', 'carlos.diaz@gmail.com', '+52-55-2234-1003', crypt('Password29', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Ana', 'Torres', 'ana.torres@gmail.com', '+52-55-2234-1004', crypt('Password30', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Luis', 'Serrano', 'luis.serrano@gmail.com', '+52-55-2234-1005', crypt('Password31', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Elena', 'Romero', 'elena.romero@gmail.com', '+52-55-2234-1006', crypt('Password32', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Jorge', 'Alvarez', 'jorge.alvarez@gmail.com', '+52-55-2234-1007', crypt('Password33', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Sandra', 'Méndez', 'sandra.mendez@gmail.com', '+52-55-2234-1008', crypt('Password34', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Francisco', 'Castro', 'francisco.castro@gmail.com', '+52-55-2234-1009', crypt('Password35', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Gabriela', 'Ortiz', 'gabriela.ortiz@gmail.com', '+52-55-2234-1010', crypt('Password36', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Miguel', 'Ruiz', 'miguel.ruiz@gmail.com', '+52-55-2234-1011', crypt('Password37', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Patricia', 'Herrera', 'patricia.herrera@gmail.com', '+52-55-2234-1012', crypt('Password38', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Roberto', 'Flores', 'roberto.flores@gmail.com', '+52-55-2234-1013', crypt('Password39', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Claudia', 'Vargas', 'claudia.vargas@gmail.com', '+52-55-2234-1014', crypt('Password40', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Andrés', 'Rojas', 'andres.rojas@gmail.com', '+52-55-2234-1015', crypt('Password41', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Laura', 'Medina', 'laura.medina@gmail.com', '+52-55-2234-1016', crypt('Password42', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('José', 'Campos', 'jose.campos@gmail.com', '+52-55-2234-1017', crypt('Password43', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Diana', 'Soto', 'diana.soto@gmail.com', '+52-55-2234-1018', crypt('Password44', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Fernando', 'Contreras', 'fernando.contreras@gmail.com', '+52-55-2234-1019', crypt('Password45', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Alejandra', 'Lara', 'alejandra.lara@gmail.com', '+52-55-2234-1020', crypt('Password46', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Ricardo', 'Miranda', 'ricardo.miranda@gmail.com', '+52-55-2234-1021', crypt('Password47', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Silvia', 'Peña', 'silvia.pena@gmail.com', '+52-55-2234-1022', crypt('Password48', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Martín', 'Cortés', 'martin.cortes@gmail.com', '+52-55-2234-1023', crypt('Password49', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Verónica', 'Núñez', 'veronica.nunez@gmail.com', '+52-55-2234-1024', crypt('Password50', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Rodrigo', 'Salazar', 'rodrigo.salazar@gmail.com', '+52-55-2234-1025', crypt('Password51', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Paola', 'Delgado', 'paola.delgado@gmail.com', '+52-55-2234-1026', crypt('Password52', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Sergio', 'Molina', 'sergio.molina@gmail.com', '+52-55-2234-1027', crypt('Password53', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Daniela', 'Carrillo', 'daniela.carrillo@gmail.com', '+52-55-2234-1028', crypt('Password54', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Arturo', 'Rangel', 'arturo.rangel@gmail.com', '+52-55-2234-1029', crypt('Password55', gen_salt('bf', 12)), 'padre', NULL, null, true),
+('Marisol', 'Barrera', 'marisol.barrera@gmail.com', '+52-55-2234-1030', crypt('Password56', gen_salt('bf', 12)), 'padre', NULL, null, true);
 
--- id del 58 al 66 Estudiantes adultos (9)
-INSERT INTO "User" (name, last_name, email, phone, password, role, description, is_active) VALUES
-('Santiago', 'Luna', 'santiago.luna@gmail.com', '+52-55-2234-1031', crypt('Password57', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Valeria', 'Cano', 'valeria.cano@gmail.com', '+52-55-2234-1032', crypt('Password58', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Emiliano', 'Vega', 'emiliano.vega@gmail.com', '+52-55-2234-1033', crypt('Password59', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Camila', 'Rivas', 'camila.rivas@gmail.com', '+52-55-2234-1034', crypt('Password60', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Matías', 'Santos', 'matias.santos@gmail.com', '+52-55-2234-1035', crypt('Password61', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Renata', 'Fuentes', 'renata.fuentes@gmail.com', '+52-55-2234-1036', crypt('Password62', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Thiago', 'Mora', 'thiago.mora@gmail.com', '+52-55-2234-1037', crypt('Password63', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Isabella', 'Cárdenas', 'isabella.cardenas@gmail.com', '+52-55-2234-1038', crypt('Password64', gen_salt('bf', 12)), 'estudiante', NULL, true),
-('Alejandro', 'Sierra', 'alejandro.sierra@gmail.com', '+52-55-2234-1039', crypt('Password65', gen_salt('bf', 12)), 'estudiante', NULL, true);
+-- id del 57 al 65 Estudiantes adultos (9)
+INSERT INTO "User" (name, last_name, email, phone, password, role, description, profile_image, is_active) VALUES
+('Santiago', 'Luna', 'santiago.luna@gmail.com', '+52-55-2234-1031', crypt('Password57', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Valeria', 'Cano', 'valeria.cano@gmail.com', '+52-55-2234-1032', crypt('Password58', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Emiliano', 'Vega', 'emiliano.vega@gmail.com', '+52-55-2234-1033', crypt('Password59', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Camila', 'Rivas', 'camila.rivas@gmail.com', '+52-55-2234-1034', crypt('Password60', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Matías', 'Santos', 'matias.santos@gmail.com', '+52-55-2234-1035', crypt('Password61', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Renata', 'Fuentes', 'renata.fuentes@gmail.com', '+52-55-2234-1036', crypt('Password62', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Thiago', 'Mora', 'thiago.mora@gmail.com', '+52-55-2234-1037', crypt('Password63', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Isabella', 'Cárdenas', 'isabella.cardenas@gmail.com', '+52-55-2234-1038', crypt('Password64', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
+('Alejandro', 'Sierra', 'alejandro.sierra@gmail.com', '+52-55-2234-1039', crypt('Password65', gen_salt('bf', 12)), 'estudiante', NULL, null, true);
+
+--NO BORRAR ESTOS INSERTS
+-- INSERTS DE ESTUDIANTES ADULTOS QUE ESTUDIAN EN LA ACADEMIA
+-- inserts de ellos mismos como hijos (9) -- 
+insert into Kid (parent_id, name, birth_date) values
+(57, 'Santiago Luna', '1995-05-20'),
+(58, 'Valeria Cano', '1992-11-15'),
+(59, 'Emiliano Vega', '1988-07-30'),
+(60, 'Camila Rivas', '1990-03-25'),
+(61, 'Matías Santos', '1993-09-10'),
+(62, 'Renata Fuentes', '1994-12-05'),
+(63, 'Thiago Mora', '1989-06-18'),
+(64, 'Isabella Cárdenas', '1991-08-22'),
+(65, 'Alejandro Sierra', '1996-04-14');
 
 -- ======================== DIRECCIONES (100 registros) ======================
 INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighborhood, municipality, is_primary) VALUES
@@ -202,7 +215,7 @@ INSERT INTO User_Address (user_id, address_id) VALUES
 -- ======================== NIÑOS (47 registros) ============================
 INSERT INTO Kid (parent_id, name, birth_date, is_solvent) VALUES
 -- Hijos de los padres (usuarios id 28-41)
-(28, 'Santiago', '2020-05-20', true),
+(27, 'Santiago', '2020-05-20', true),
 (28, 'Valeria', '2015-11-15', true),
 (29, 'Emiliano', '2014-07-30', true),
 (29, 'Camila', '2013-03-25', true),
@@ -228,6 +241,10 @@ INSERT INTO Kid (parent_id, name, birth_date, is_solvent) VALUES
 (39, 'Lucía', '2019-03-03', true),
 (39, 'Daniel', '2017-11-11', false),
 (40, 'Valentina', '2018-06-22', true);
+
+
+
+
 
 -- ======================== KID_ADDRESS (56 registros) ======================
 INSERT INTO Kid_Address (kid_id, address_id) VALUES
