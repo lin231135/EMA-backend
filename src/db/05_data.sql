@@ -98,7 +98,7 @@ insert into Kid (parent_id, name, birth_date) values
 (62, 'Renata Fuentes', '1994-12-05'),
 (63, 'Thiago Mora', '1989-06-18'),
 (64, 'Isabella Cárdenas', '1991-08-22'),
-(65, 'Alejandro Sierra', '1996-04-14');
+(65, 'Alejandro Sierra', '1996-04-14');
 
 -- ======================== DIRECCIONES (100 registros) ======================
 INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighborhood, municipality, is_primary) VALUES

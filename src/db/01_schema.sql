@@ -194,6 +194,19 @@ CREATE TABLE IF NOT EXISTS whatsapp_interactions (
   FOREIGN KEY (phone_number) REFERENCES whatsapp_users(phone_number) ON DELETE CASCADE
 );
 
+-- Tabla para almacenar materiales educativos asociados a Teacher_course
+CREATE TABLE IF NOT EXISTS Material (
+  id SERIAL PRIMARY KEY,
+  teacher_course_id INT NOT NULL REFERENCES Teacher_course(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  file_url VARCHAR(500) NOT NULL,          -- URL pública (secure_url)
+  public_id VARCHAR(255) NOT NULL,         -- ID del archivo en Cloudinary
+  file_type VARCHAR(50) NOT NULL,          -- 'image', 'pdf', 'video', etc.
+  uploaded_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+
 -- Índices para mejorar el rendimiento
 CREATE INDEX IF NOT EXISTS idx_whatsapp_users_phone ON whatsapp_users(phone_number);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_interactions_phone ON whatsapp_interactions(phone_number);
