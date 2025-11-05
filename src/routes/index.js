@@ -14,7 +14,7 @@ import studentPaymentRoutes from './student/studentsPayments.routes.js';
 import uploadRoutes from './app/upload.routes.js';
 import scheduleRoutes from './courses/schedule.routes.js';
 import bookingsRoutes from './app/bookings.routes.js';
-import materialRoutes from './teacher/material.routes.js';
+
 
 const router = Router();
 
@@ -35,6 +35,6 @@ router.use('/students', studentRoutes);
 router.use('/students', studentPaymentRoutes); 
 router.use('/schedules', scheduleRoutes); // /api/schedules/*
 router.use('/bookings', bookingsRoutes); // /api/bookings/*
-router.use('/materials', materialRoutes);
+
 
 export default router;

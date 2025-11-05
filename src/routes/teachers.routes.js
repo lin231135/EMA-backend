@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getCalendar, addClass, getClassFeedback, addClassFeedback } from '../controllers/schedule.controller.js';
 import { getCourses, getTodayClasses } from '../controllers/teacher/teacher.controller.js';
 import { getStudentsReport } from '../controllers/student.report.controller.js';
+import materialRoutes from './teacher/material.routes.js';
 
 const router = Router();
 
@@ -17,6 +18,9 @@ router.post('/calendar', addClass);
 router.get('/calendar/bookings/:bookingId/feedback', getClassFeedback);
 router.post('/calendar/bookings/:bookingId/feedback', addClassFeedback);
 router.get('/calendar/today-classes', getTodayClasses);
+
+/** Endpoints de Materiales */
+router.use('/materials', materialRoutes);
 
 export default router;
 
