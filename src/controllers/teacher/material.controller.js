@@ -61,3 +61,80 @@ export const createMaterial = async (req, res) => {
     res.status(500).json({ error: 'Error al crear material.' });
   }
 };
+
+
+// ================= GET ALL MATERIALS =================
+export const getAllMaterials = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Material ORDER BY uploaded_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener materiales:', error);
+    res.status(500).json({ error: 'Error al obtener materiales.' });
+  }
+};
+
+// ================= GET MATERIAL BY ID =================
+export const getMaterialById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM Material WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Material no encontrado.' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener material:', error);
+    res.status(500).json({ error: 'Error al obtener material.' });
+  }
+};
+
+// ================= UPDATE MATERIAL =================
+export const updateMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+    const file = req.file; // puede venir o no
+
+    // Obtener material existente
+    const existing = await pool.query('SELECT * FROM Material WHERE id = $1', [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Material no encontrado.' });
+    }
+
+    let file_url = existing.rows[0].file_url;
+    let public_id = existing.rows[0].public_id;
+    let file_type = existing.rows[0].file_type;
+
+    // Si se subió un nuevo archivo, eliminar el anterior y subir el nuevo
+    if (file) {
+      await cloudinary.uploader.destroy(public_id, { resource_type: file_type });
+
+      const result = await uploadToCloudinary(file.buffer);
+      file_url = result.secure_url;
+      public_id = result.public_id;
+      file_type = result.resource_type;
+    }
+
+    // Actualizar en DB
+    const query = `
+      UPDATE Material
+      SET title = COALESCE($1, title),
+          description = COALESCE($2, description),
+          file_url = $3,
+          public_id = $4,
+          file_type = $5
+      WHERE id = $6
+      RETURNING *;
+    `;
+    const values = [title, description, file_url, public_id, file_type, id];
+    const updated = await pool.query(query, values);
+
+    res.json(updated.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar material:', error);
+    res.status(500).json({ error: 'Error al actualizar material.' });
+  }
+};
