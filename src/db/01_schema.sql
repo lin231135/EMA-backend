@@ -194,19 +194,6 @@ CREATE TABLE IF NOT EXISTS whatsapp_interactions (
   FOREIGN KEY (phone_number) REFERENCES whatsapp_users(phone_number) ON DELETE CASCADE
 );
 
--- Tabla para almacenar materiales educativos asociados a Teacher_course
-CREATE TABLE IF NOT EXISTS Material (
-  id SERIAL PRIMARY KEY,
-  teacher_course_id INT NOT NULL REFERENCES Teacher_course(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  file_url VARCHAR(500) NOT NULL,          -- URL pública (secure_url)
-  public_id VARCHAR(255) NOT NULL,         -- ID del archivo en Cloudinary
-  file_type VARCHAR(50) NOT NULL,          -- 'image', 'pdf', 'video', etc.
-  uploaded_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-
 -- Índices para mejorar el rendimiento
 CREATE INDEX IF NOT EXISTS idx_whatsapp_users_phone ON whatsapp_users(phone_number);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_interactions_phone ON whatsapp_interactions(phone_number);
@@ -216,59 +203,5 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_interactions_created ON whatsapp_interac
 COMMENT ON TABLE whatsapp_users IS 'Usuarios que interactúan con el bot de WhatsApp';
 COMMENT ON TABLE whatsapp_interactions IS 'Historial de todas las interacciones con el bot';
 COMMENT ON COLUMN whatsapp_users.language IS 'Idioma preferido: es (español) o en (inglés)';
-
--- ======================== TRIGGERS ==========================================
-
--- Función que crea un Payment automáticamente cuando se crea un Booking
-CREATE OR REPLACE FUNCTION create_payment_for_booking()
-RETURNS TRIGGER AS $$
-DECLARE
-  course_cost DECIMAL(10,2);
-  new_payment_id INT;
-BEGIN
-  -- Obtener el costo del curso
-  SELECT cost INTO course_cost
-  FROM Course
-  WHERE id = NEW.course_id;
-  
-  -- Crear el Payment con estado 'pendiente'
-  INSERT INTO Payment (
-    user_id,
-    payment_method,
-    total,
-    state,
-    note
-  ) VALUES (
-    NEW.user_id,
-    'efectivo',  -- Método de pago por defecto
-    course_cost,
-    'pendiente',  -- Estado inicial
-    'Pago generado automáticamente para booking #' || NEW.id
-  )
-  RETURNING id INTO new_payment_id;
-  
-  -- Crear el Payment_item asociando el booking con el payment
-  INSERT INTO Payment_item (
-    payment_id,
-    booking_id,
-    unit_cost,
-    subtotal
-  ) VALUES (
-    new_payment_id,
-    NEW.id,
-    course_cost,
-    course_cost
-  );
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger que ejecuta la función después de insertar un Booking
-DROP TRIGGER IF EXISTS trigger_create_payment_after_booking ON Booking;
-CREATE TRIGGER trigger_create_payment_after_booking
-  AFTER INSERT ON Booking
-  FOR EACH ROW
-  EXECUTE FUNCTION create_payment_for_booking();
 
 COMMIT;

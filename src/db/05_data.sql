@@ -1,25 +1,24 @@
 -- ============================================================================
--- data.sql | Ellie's Music Academy - Datos de prueba (100 registros por tabla)
+-- data.sql | Ellie's Music Academy - Datos de prueba
 -- ============================================================================
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 BEGIN;
 
--- ======================== USUARIOS (56 registros) =========================
--- Administradores, maestros, padres y estudiantes adultos
-INSERT INTO "User" (name, last_name, email, phone, password, role, description, profile_image, is_active) VALUES
+-- ======================== USUARIOS =========================
 
--- Super usuario
+INSERT INTO "User" (name, last_name, email, phone, password, role, description, profile_image, is_active) VALUES
+-- Super usuario (ID 1)
 ('Ellie', 'Delgado', 'sup@elliesmusic.com', '+502-1243-1546', crypt('Password1', gen_salt('bf', 12)), 'admin', null, null, true),
 
--- Administradores (5)
+-- Administradores (IDs del 2 al 6)
 ('María', 'García', 'admin1@elliesmusic.com', '+502-1245-4512', crypt('Password2', gen_salt('bf', 12)), 'admin', null, null, true),
 ('Carlos', 'López', 'admin2@elliesmusic.com', '+502-8978-4516', crypt('Password3', gen_salt('bf', 12)), 'admin', null, null, true),
 ('Ana', 'Rodríguez', 'admin3@elliesmusic.com', '+502-1459-2789', crypt('Password4', gen_salt('bf', 12)), 'admin', null, null, true),
 ('Pedro', 'Martínez', 'admin4@elliesmusic.com', '+502-1625-3978', crypt('Password5', gen_salt('bf', 12)), 'admin', null, null, true),
 ('Laura', 'Hernández', 'admin5@elliesmusic.com', '+502-1526-4253', crypt('Password6', gen_salt('bf', 12)), 'admin', null, null, true),
 
--- Maestros (20)
+-- Maestros (IDs del 7 al 26)
 ('Miguel', 'Ángel', 'miguel.angel@elliesmusic.com', '+52-55-1234-5683', crypt('Password7', gen_salt('bf', 12)), 'maestro', 'Pianista concertista con 15 años de experiencia', null, true),
 ('Sofía', 'Castillo', 'sofia.castillo@elliesmusic.com', '+52-55-1234-5684', crypt('Password8', gen_salt('bf', 12)), 'maestro', 'Guitarrista profesional, especialista en flamenco', null, true),
 ('Ricardo', 'Fernández', 'ricardo.fernandez@elliesmusic.com', '+52-55-1234-5685', crypt('Password9', gen_salt('bf', 12)), 'maestro', 'Violinista de orquesta sinfónica', null, true),
@@ -41,8 +40,7 @@ INSERT INTO "User" (name, last_name, email, phone, password, role, description, 
 ('Antonio', 'Ríos', 'antonio.rios@elliesmusic.com', '+52-55-1234-5701', crypt('Password25', gen_salt('bf', 12)), 'maestro', 'Guitarrista eléctrico rock/metal', null, true),
 ('Daniela', 'Acosta', 'daniela.acosta@elliesmusic.com', '+52-55-1234-5702', crypt('Password26', gen_salt('bf', 12)), 'maestro', 'Pianista para niños y principiantes', null, true),
 
--- Padres/Estudiantes adultos (30) - Algunos también son estudiantes
--- ids del 27 al 56
+-- Padres (IDs del 27 al 56)
 ('Juan', 'Pérez', 'juan.perez@gmail.com', '+52-55-2234-1001', crypt('Password27', gen_salt('bf', 12)), 'padre', NULL, null, true),
 ('María', 'González', 'maria.gonzalez@gmail.com', '+52-55-2234-1002', crypt('Password28', gen_salt('bf', 12)), 'padre', NULL, null, true),
 ('Carlos', 'Díaz', 'carlos.diaz@gmail.com', '+52-55-2234-1003', crypt('Password29', gen_salt('bf', 12)), 'padre', NULL, null, true),
@@ -74,7 +72,7 @@ INSERT INTO "User" (name, last_name, email, phone, password, role, description, 
 ('Arturo', 'Rangel', 'arturo.rangel@gmail.com', '+52-55-2234-1029', crypt('Password55', gen_salt('bf', 12)), 'padre', NULL, null, true),
 ('Marisol', 'Barrera', 'marisol.barrera@gmail.com', '+52-55-2234-1030', crypt('Password56', gen_salt('bf', 12)), 'padre', NULL, null, true);
 
--- id del 57 al 65 Estudiantes adultos (9)
+-- Estudiantes Adultos (IDs del 57 al 65)
 INSERT INTO "User" (name, last_name, email, phone, password, role, description, profile_image, is_active) VALUES
 ('Santiago', 'Luna', 'santiago.luna@gmail.com', '+52-55-2234-1031', crypt('Password57', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
 ('Valeria', 'Cano', 'valeria.cano@gmail.com', '+52-55-2234-1032', crypt('Password58', gen_salt('bf', 12)), 'estudiante', NULL, null, true),
@@ -88,7 +86,7 @@ INSERT INTO "User" (name, last_name, email, phone, password, role, description, 
 
 --NO BORRAR ESTOS INSERTS
 -- INSERTS DE ESTUDIANTES ADULTOS QUE ESTUDIAN EN LA ACADEMIA
--- inserts de ellos mismos como hijos (9) -- 
+-- inserts de ellos mismos como hijos -- 
 insert into Kid (parent_id, name, birth_date) values
 (57, 'Santiago Luna', '1995-05-20'),
 (58, 'Valeria Cano', '1992-11-15'),
@@ -100,7 +98,8 @@ insert into Kid (parent_id, name, birth_date) values
 (64, 'Isabella Cárdenas', '1991-08-22'),
 (65, 'Alejandro Sierra', '1996-04-14');
 
--- ======================== DIRECCIONES (100 registros) ======================
+-- ======================== DIRECCIONES ======================
+
 INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighborhood, municipality, is_primary) VALUES
 -- Direcciones primarias para usuarios
 ('Ciudad de Guatemala', 'Apto 101', 'Av. Reforma 123', 'Zona 10', '45A', 'Col. Juárez', 'Guatemala', true),
@@ -159,6 +158,7 @@ INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighbo
 ('Ciudad de Guatemala', NULL, 'Av. Coyoacán 654', 'Zona 15', '332', 'Col. Del Valle', 'Guatemala', true),
 ('Ciudad de Guatemala', 'Apto 309', 'Calle Durango 852', 'Zona 10', '443', 'Col. Roma Sur', 'Guatemala', true),
 ('Ciudad de Guatemala', NULL, 'Av. Insurgentes Sur 147', 'Zona 16', '554', 'Col. Del Valle', 'Guatemala', true),
+
 -- Direcciones adicionales para completar 100 registros (secundarias)
 ('Ciudad de Guatemala', 'Apto B', 'Av. Las Américas 123', 'Zona 13', '665', 'Col. Las Américas', 'Guatemala', false),
 ('Ciudad de Guatemala', NULL, 'Calle Martí 456', 'Zona 11', '776', 'Col. La Florida', 'Guatemala', false),
@@ -203,7 +203,8 @@ INSERT INTO Address (city, apartment, street_avenue, zone, house_number, neighbo
 ('Ciudad de Guatemala', 'Apto 120', 'Av. Los Claveles 258', 'Zona 12', '171', 'Col. Los Claveles', 'Guatemala', false),
 ('Ciudad de Guatemala', NULL, 'Calle Santa Rosa 654', 'Zona 10', '270', 'Col. Santa Rosa', 'Guatemala', false);
 
--- ======================== USER_ADDRESS (56 registros) ======================
+-- ======================== USER_ADDRESS ======================
+
 INSERT INTO User_Address (user_id, address_id) VALUES
 (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
 (11, 11), (12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20),
@@ -212,9 +213,10 @@ INSERT INTO User_Address (user_id, address_id) VALUES
 (41, 41), (42, 42), (43, 43), (44, 44), (45, 45), (46, 46), (47, 47), (48, 48), (49, 49), (50, 50),
 (51, 51), (52, 52), (53, 53), (54, 54), (55, 55), (56, 56);
 
--- ======================== NIÑOS (47 registros) ============================
+-- ======================== NIÑOS ============================
+
 INSERT INTO Kid (parent_id, name, birth_date, is_solvent) VALUES
--- Hijos de los padres (usuarios id 28-41)
+-- Hijos de los padres (usuarios id 27-40)
 (27, 'Santiago', '2020-05-20', true),
 (28, 'Valeria', '2015-11-15', true),
 (29, 'Emiliano', '2014-07-30', true),
@@ -242,11 +244,8 @@ INSERT INTO Kid (parent_id, name, birth_date, is_solvent) VALUES
 (39, 'Daniel', '2017-11-11', false),
 (40, 'Valentina', '2018-06-22', true);
 
+-- ======================== KID_ADDRESS ======================
 
-
-
-
--- ======================== KID_ADDRESS (56 registros) ======================
 INSERT INTO Kid_Address (kid_id, address_id) VALUES
 (1, 1),
 (2, 1),
@@ -259,20 +258,24 @@ INSERT INTO Kid_Address (kid_id, address_id) VALUES
 (9, 4),
 (10, 5);
 
--- ======================== CURSOS (50 registros) ============================
+-- ======================== CURSOS ============================
+
 INSERT INTO Course (name, modality, capacity, cost, is_active) VALUES
--- Cursos de piano
+-- Cursos para principiantes
 ('Piano (Principiante)', 'academia', 1, 250.00, true),
 ('Canto (Principiante)', 'academia', 1, 250.00, true),
 ('Guitarra (Principiante)', 'academia', 3, 250.00, true),
+
+-- Cursos para avanzados
 ('Piano (Avanzado)', 'academia', 2, 400.00, true),
 ('Canto (Avanzado)', 'academia', 2, 400.00, true),
 ('Guitarra (Avanzado)', 'academia', 5, 400.00, true),
+
+-- Curso especial
 ('Estimulación Musical', 'academia', 1, 500.00, true);
 
--- ======================== CURSOS QUE IMPARTEN LOS MAESTROS (50 registros) ============================
--- id 7 al 26
--- Distribución en cursos 1..5 (coinciden con los usados en Schedule)
+-- ======================== CURSOS QUE IMPARTEN LOS MAESTROS ============================
+
 INSERT INTO Teacher_course (teacher_id, course_id) VALUES
 (7, 1),
 (7, 2),
@@ -288,34 +291,51 @@ INSERT INTO Teacher_course (teacher_id, course_id) VALUES
 (9, 5),
 (9, 6);
 
--- ======================== HORARIOS (100 registros) =========================
--- Generar horarios para los próximos 3 meses
+-- ======================== HORARIOS =========================
+
 INSERT INTO Schedule (course_id, teacher_id, schedule_date, start_time, end_time) VALUES
--- Horarios para la semana actual
+-- Horarios con reserva activa
 (1, 7, CURRENT_DATE + INTERVAL '1 day', '10:00:00', '11:00:00'),
 (1, 7, CURRENT_DATE + INTERVAL '1 day', '11:00:00', '12:00:00'),
-(1, 7, CURRENT_DATE + INTERVAL '2 days', '16:00:00', '17:00:00'),
-(2, 7, CURRENT_DATE + INTERVAL '3 days', '17:00:00', '18:30:00'),
-(2, 7, CURRENT_DATE + INTERVAL '4 days', '09:00:00', '10:00:00'),
-(2, 7, CURRENT_DATE + INTERVAL '5 days', '15:00:00', '16:00:00'),
--- Horarios para las próximas semanas
-(3, 7, CURRENT_DATE + INTERVAL '8 days', '10:00:00', '11:00:00'),
-(3, 7, CURRENT_DATE + INTERVAL '8 days', '11:00:00', '12:00:00'),
-(3, 7, CURRENT_DATE + INTERVAL '9 days', '16:00:00', '17:00:00'),
-(4, 8, CURRENT_DATE + INTERVAL '10 days', '17:00:00', '18:30:00'),
-(4, 8, CURRENT_DATE + INTERVAL '11 days', '09:00:00', '10:00:00'),
-(4, 8, CURRENT_DATE + INTERVAL '12 days', '15:00:00', '16:00:00'),
--- horarios para las próximas semanas
-(5, 9, CURRENT_DATE + INTERVAL '15 days', '10:00:00', '11:00:00'),
-(5, 9, CURRENT_DATE + INTERVAL '15 days', '11:00:00', '12:00:00'),
-(6, 7, CURRENT_DATE + INTERVAL '16 days', '16:00:00', '17:00:00'),
-(6, 7, CURRENT_DATE + INTERVAL '17 days', '17:00:00', '18:30:00'),
-(7, 7, CURRENT_DATE + INTERVAL '18 days', '09:00:00', '10:00:00'),
-(7, 7, CURRENT_DATE + INTERVAL '19 days', '15:00:00', '16:00:00');
+(1, 7, CURRENT_DATE + INTERVAL '1 days', '16:00:00', '17:00:00'),
+(2, 7, CURRENT_DATE + INTERVAL '2 days', '17:00:00', '18:00:00'),
+(2, 7, CURRENT_DATE + INTERVAL '2 days', '09:00:00', '10:00:00'),
+(2, 7, CURRENT_DATE + INTERVAL '2 days', '15:00:00', '16:00:00'),
+(3, 7, CURRENT_DATE + INTERVAL '3 days', '10:00:00', '11:00:00'),
+(3, 7, CURRENT_DATE + INTERVAL '3 days', '11:00:00', '12:00:00'),
+(3, 7, CURRENT_DATE + INTERVAL '3 days', '16:00:00', '17:00:00'),
+(4, 8, CURRENT_DATE + INTERVAL '1 days', '17:00:00', '18:00:00'),
+(4, 8, CURRENT_DATE + INTERVAL '1 days', '09:00:00', '10:00:00'),
+(4, 8, CURRENT_DATE + INTERVAL '1 days', '15:00:00', '16:00:00'),
+(5, 9, CURRENT_DATE + INTERVAL '2 days', '10:00:00', '11:00:00'),
+(5, 9, CURRENT_DATE + INTERVAL '2 days', '11:00:00', '12:00:00'),
+(6, 9, CURRENT_DATE + INTERVAL '2 days', '16:00:00', '17:00:00'),
 
--- ======================== RESERVAS (100 registros) =========================
+-- Horarios con reserva no activa (cancelados, es decir, disponibles)
+(6, 7, CURRENT_DATE + INTERVAL '5 days', '17:00:00', '18:00:00'),
+(7, 7, CURRENT_DATE + INTERVAL '5 days', '09:00:00', '10:00:00'),
+(7, 7, CURRENT_DATE + INTERVAL '5 days', '15:00:00', '16:00:00'),
+
+-- Horarios sin reserva (disponibles)
+(1, 7, CURRENT_DATE + INTERVAL '8 days', '10:00:00', '11:00:00'),
+(1, 7, CURRENT_DATE + INTERVAL '8 days', '11:00:00', '12:00:00'),
+(2, 7, CURRENT_DATE + INTERVAL '8 days', '14:00:00', '15:00:00'),
+(2, 7, CURRENT_DATE + INTERVAL '9 days', '15:00:00', '16:00:00'),
+(3, 7, CURRENT_DATE + INTERVAL '9 days', '16:00:00', '17:00:00'),
+(3, 7, CURRENT_DATE + INTERVAL '9 days', '17:00:00', '18:00:00'),
+(4, 7, CURRENT_DATE + INTERVAL '10 days', '09:00:00', '10:00:00'),
+(4, 7, CURRENT_DATE + INTERVAL '10 days', '11:00:00', '12:00:00'),
+(4, 7, CURRENT_DATE + INTERVAL '10 days', '13:00:00', '14:00:00'),
+(5, 7, CURRENT_DATE + INTERVAL '11 days', '15:00:00', '16:00:00'),
+(5, 7, CURRENT_DATE + INTERVAL '11 days', '17:00:00', '18:00:00'),
+(5, 7, CURRENT_DATE + INTERVAL '11 days', '10:00:00', '11:00:00'),
+(6, 7, CURRENT_DATE + INTERVAL '12 days', '12:00:00', '13:00:00'),
+(6, 7, CURRENT_DATE + INTERVAL '12 days', '14:00:00', '15:00:00'),
+(6, 7, CURRENT_DATE + INTERVAL '12 days', '16:00:00', '17:00:00');
+
+-- ======================== RESERVAS =========================
+
 INSERT INTO Booking (user_id, kid_id, course_id, schedule_id, teacher_id, modality, status, booked_at, note) VALUES
--- Reservas programadas (primeros 30 registros)
 (28, 1, 1, 1, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
 (28, 1, 4, 10, 8, 'academia', 'programada', NOW() - INTERVAL '5 days', NULL),
 (28, 2, 1, 2, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
@@ -327,7 +347,7 @@ INSERT INTO Booking (user_id, kid_id, course_id, schedule_id, teacher_id, modali
 (30, 5, 2, 5, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
 (30, 5, 5, 14, 9, 'academia', 'programada', NOW() - INTERVAL '5 days', NULL),
 (30, 6, 2, 6, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
-(30, 6, 6, 15, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', NULL),
+(30, 6, 6, 15, 9, 'academia', 'programada', NOW() - INTERVAL '5 days', NULL),
 (31, 7, 3, 7, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
 (31, 7, 6, 16, 7, 'academia', 'cancelada', NOW() - INTERVAL '5 days', NULL),
 (31, 8, 3, 8, 7, 'academia', 'programada', NOW() - INTERVAL '5 days', 'Primera clase de prueba'),
@@ -336,6 +356,7 @@ INSERT INTO Booking (user_id, kid_id, course_id, schedule_id, teacher_id, modali
 (31, 9, 7, 18, 7, 'academia', 'cancelada', NOW() - INTERVAL '5 days', NULL);
 
 -- ======================== FEEDBACK ==========================
+
 INSERT INTO Feedback (booking_id, teacher_id, content, created_at) VALUES
 (1, 7, 'Tienes gran interés y aptitud para el piano. Practica las escalas diariamente.', NOW() - INTERVAL '9 days'),
 (2, 8, 'Tienes buena voz pero necesitas trabajar en tu respiración.', NOW() - INTERVAL '7 days'),
@@ -344,7 +365,8 @@ INSERT INTO Feedback (booking_id, teacher_id, content, created_at) VALUES
 (5, 7, 'Eres muy creativa. Te recomiendo empezar a componer pequeñas piezas.', NOW() - INTERVAL '4 days'),
 (6, 8, 'Necesitas mejorar coordinación. Ejercicios de ritmo recomendados.', NOW() - INTERVAL '2 days');
 
--- ======================== PAGOS (100 registros) ============================
+-- ======================== PAGOS ============================
+
 INSERT INTO Payment (user_id, payment_method, total, payment_date, state, reference_pic, note) VALUES
 (28, 'transferencia', 2000.00, NOW() - INTERVAL '15 days', 'en revision', 'transferencia_001.jpg', 'Pago mensual Diego y Valeria'),
 (28, 'efectivo', 450.00, NOW() - INTERVAL '10 days', 'en revision', NULL, 'Clase prueba Santiago'),
@@ -447,7 +469,8 @@ INSERT INTO Payment (user_id, payment_method, total, payment_date, state, refere
 (34, 'transferencia', 970.00, NOW() - INTERVAL '99 days', 'aceptado', 'transferencia_050.jpg', 'Pago Cepeda avanzado'),
 (35, 'efectivo', 1820.00, NOW() - INTERVAL '100 days', 'aceptado', NULL, 'Pago Fierro familiar');
 
--- ======================== DETALLES DE PAGO (100 registros) =================
+-- ======================== DETALLES DE PAGO =================
+
 INSERT INTO Payment_item (payment_id, booking_id, book_id, unit_cost, subtotal) VALUES
 (1, 1, NULL, 500.00, 500.00),
 (1, 2, NULL, 500.00, 500.00),
@@ -468,7 +491,8 @@ INSERT INTO Payment_item (payment_id, booking_id, book_id, unit_cost, subtotal) 
 (8, 17, NULL, 550.00, 550.00),
 (9, 18, NULL, 550.00, 550.00);
 
----------------------------------Notas de estudiantes-------------------
+-- ======================== NOTAS DE ESTUDIANTES =================
+
 INSERT INTO Notes (kid_id, note) VALUES
 (1, 'Repasar escalas antes de la próxima clase'),
 (2, 'Practicar respiración diafragmática'),

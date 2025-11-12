@@ -8,7 +8,7 @@ export async function createBooking(req, res) {
   const client = await pool.connect();
   
   try {
-    const { kid_id, schedule_id, note } = req.body;
+    const { kid_id, schedule_id, note, payment_method } = req.body;
     
     // user_id siempre se toma del JWT
     const userId = req.user.id;
@@ -82,7 +82,7 @@ export async function createBooking(req, res) {
     
     // Validar que el course existe
     const courseQuery = await client.query(
-      'SELECT id FROM Course WHERE id = $1',
+      'SELECT id, cost FROM Course WHERE id = $1',
       [course_id]
     );
     
@@ -92,6 +92,8 @@ export async function createBooking(req, res) {
         error: "Course not found"
       });
     }
+    
+    const courseCost = courseQuery.rows[0].cost;
     
     // Validar que el schedule no esté ya reservado (status programada o completada)
     const existingBookingQuery = await client.query(
@@ -109,19 +111,46 @@ export async function createBooking(req, res) {
     // Crear el booking
     const finalNote = note && note.trim() !== "" ? note : null;
     
-    const insertQuery = await client.query(
-      `INSERT INTO Booking (user_id, kid_id, course_id, schedule_id, teacher_id, modality, status, note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, user_id, kid_id, course_id, schedule_id, teacher_id, modality, status, booked_at, note`,
-      [userId, kid_id, course_id, schedule_id, teacher_id, modality, 'programada', finalNote]
-    );
+    // Iniciar transacción
+    await client.query('BEGIN');
     
-    const booking = insertQuery.rows[0];
-    
-    return res.status(201).json({
-      ok: true,
-      data: booking
-    });
+    try {
+      // Insertar el booking
+      const insertQuery = await client.query(
+        `INSERT INTO Booking (user_id, kid_id, course_id, schedule_id, teacher_id, modality, status, note)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id, user_id, kid_id, course_id, schedule_id, teacher_id, modality, status, booked_at, note`,
+        [userId, kid_id, course_id, schedule_id, teacher_id, modality, 'programada', finalNote]
+      );
+      
+      const booking = insertQuery.rows[0];
+      
+      // Crear el pago asociado automáticamente
+      const paymentQuery = await client.query(
+        `INSERT INTO Payment (user_id, payment_method, total, state, note)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, user_id, payment_method, total, payment_date, state, reference_pic, note, admin_note`,
+        [userId, payment_method, courseCost, 'pendiente', `Pago automático para booking #${booking.id}`]
+      );
+      
+      const payment = paymentQuery.rows[0];
+      
+      // Commit de la transacción
+      await client.query('COMMIT');
+      
+      return res.status(201).json({
+        ok: true,
+        data: {
+          booking,
+          payment
+        }
+      });
+      
+    } catch (transactionErr) {
+      // Rollback en caso de error
+      await client.query('ROLLBACK');
+      throw transactionErr;
+    }
     
   } catch (err) {
     console.error("[createBooking] error:", err);

@@ -15,7 +15,6 @@ import uploadRoutes from './app/upload.routes.js';
 import scheduleRoutes from './courses/schedule.routes.js';
 import bookingsRoutes from './app/bookings.routes.js';
 
-
 const router = Router();
 
 // Rutas principales
@@ -26,7 +25,6 @@ router.use('/students', studentRoutes)  // /api/students/*
 router.use('/parents', parentRoutes)  // /api/parents/* (dashboard, calendar, payments, etc.)
 router.use('/parents', parentsRoutes)  // /api/parents/* (children, profiles)
 router.use('/teachers', teacherRoutes)  // /api/teachers/*
-router.use('/teacher', teacherRoutes);
 router.use('/admins', adminRoutes)  // /api/admins/*
 router.use('/sup', supRoutes)  // /api/sup/*
 router.use('/contact', contact)  // /api/contact/*
@@ -36,6 +34,5 @@ router.use('/students', studentRoutes);
 router.use('/students', studentPaymentRoutes); 
 router.use('/schedules', scheduleRoutes); // /api/schedules/*
 router.use('/bookings', bookingsRoutes); // /api/bookings/*
-
 
 export default router;

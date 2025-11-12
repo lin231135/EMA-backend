@@ -147,6 +147,7 @@ export async function createSchedule(req, res) {
 export async function getAllSchedules(req, res) {
   try {
     // Consultar todos los schedules con información relacionada
+    // Excluir aquellos que ya tienen un booking en estado 'programada' o 'completada'
     const query = `
       SELECT 
         s.id,
@@ -161,8 +162,11 @@ export async function getAllSchedules(req, res) {
       FROM Schedule s
       INNER JOIN Course c ON c.id = s.course_id
       INNER JOIN "User" u ON u.id = s.teacher_id
+      LEFT JOIN Booking b ON b.schedule_id = s.id 
+        AND b.status IN ('programada', 'completada')
       WHERE u.is_active = TRUE
         AND s.schedule_date >= CURRENT_DATE + INTERVAL '1 day'
+        AND b.id IS NULL
     `;
 
     const result = await pool.query(query);
@@ -222,16 +226,20 @@ export async function getSchedulesByCourse(req, res) {
     }
 
     // Consultar todos los schedules del curso con información relacionada
+    // Excluir aquellos que ya tienen un booking en estado 'programada' o 'completada'
     const query = `
       SELECT
-        id,
-        schedule_date,
-        start_time,
-        end_time
-      FROM Schedule
-      WHERE course_id = $1 
-        AND schedule_date >= CURRENT_DATE + INTERVAL '1 day'
-      ORDER BY schedule_date ASC, start_time ASC
+        s.id,
+        s.schedule_date,
+        s.start_time,
+        s.end_time
+      FROM Schedule s
+      LEFT JOIN Booking b ON b.schedule_id = s.id 
+        AND b.status IN ('programada', 'completada')
+      WHERE s.course_id = $1 
+        AND s.schedule_date >= CURRENT_DATE + INTERVAL '1 day'
+        AND b.id IS NULL
+      ORDER BY s.schedule_date ASC, s.start_time ASC
     `;
 
     const result = await pool.query(query, [courseId]);
