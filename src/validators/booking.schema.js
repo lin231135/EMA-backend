@@ -12,3 +12,11 @@ export const createBookingSchema = z.object({
   query: z.object({}).optional(),
   params: z.object({}).optional(),
 });
+
+export const getBookingByIdSchema = z.object({
+  body: z.object({}).optional(),
+  query: z.object({}).optional(),
+  params: z.object({
+    id: z.string().regex(/^\d+$/, { message: "id must be a valid number" })
+  }),
+});
