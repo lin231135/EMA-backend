@@ -3,6 +3,7 @@ import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../../con
 import { getCalendar, getClassFeedback } from '../../controllers/schedule.controller.js';
 import { getPendingPayments, createStudentPayment } from '../../controllers/student/studentPayment.controller.js';
 import { getBooks, getBook } from '../../controllers/book.controller.js';
+import { getUnpaidBookingsByStudent } from '../../controllers/admin/bookings.controller.js';
 import { verifyToken /*, isStudent */ } from '../../middlewares/auth.js';
 
 const router = Router();
@@ -20,6 +21,9 @@ router.get('/calendar/bookings/:bookingId/feedback', getClassFeedback);
 /* Endpoints de Payments */
 router.get('/payments/pending', verifyToken, getPendingPayments);
 router.post('/payments', verifyToken, createStudentPayment);
+
+/* Endpoints de Bookings */
+router.get('/bookings/unpaid', verifyToken, getUnpaidBookingsByStudent);
 
 /* Endpoints de Book Catalog */
 router.get('/books', getBooks);
