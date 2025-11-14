@@ -125,15 +125,27 @@ export async function createBooking(req, res) {
       
       const booking = insertQuery.rows[0];
       
+      // Determinar el estado del pago según el método
+      // - efectivo: va directo a 'en revision' (se asume que pagó en persona)
+      // - transferencia/deposito: queda 'pendiente' (debe subir comprobante)
+      const paymentState = payment_method === 'efectivo' ? 'en revision' : 'pendiente';
+      
       // Crear el pago asociado automáticamente
       const paymentQuery = await client.query(
         `INSERT INTO Payment (user_id, payment_method, total, state, note)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, user_id, payment_method, total, payment_date, state, reference_pic, note, admin_note`,
-        [userId, payment_method, courseCost, 'pendiente', `Pago automático para booking #${booking.id}`]
+        [userId, payment_method, courseCost, paymentState, `Pago automático para booking #${booking.id}`]
       );
       
       const payment = paymentQuery.rows[0];
+      
+      // Crear el Payment_item que vincula el pago con el booking
+      await client.query(
+        `INSERT INTO Payment_item (payment_id, booking_id, unit_cost, subtotal)
+         VALUES ($1, $2, $3, $4)`,
+        [payment.id, booking.id, courseCost, courseCost]
+      );
       
       // Commit de la transacción
       await client.query('COMMIT');

@@ -145,33 +145,28 @@ export async function getParentPaymentHistory(req, res) {
    ========================================================================= */
 export async function getStudentPaymentHistory(req, res) {
   const authId = req.user?.id;
+  console.log('[getStudentPaymentHistory] authId:', authId);
+  
   if (!authId) return res.status(401).json({ message: 'Unauthorized' });
 
   // Si viene ?kid_id, intentaremos validarlo según el rol
   const requestedKidId = req.query.kid_id ? Number(req.query.kid_id) : null;
+  console.log('[getStudentPaymentHistory] requestedKidId:', requestedKidId);
 
   try {
     // Rol de quien consulta
     const roleQ = await pool.query(`SELECT role FROM "User" WHERE id = $1 LIMIT 1`, [authId]);
     if (roleQ.rowCount === 0) return res.status(404).json({ message: 'User not found' });
     const role = roleQ.rows[0].role;
+    console.log('[getStudentPaymentHistory] role:', role);
 
     // Helper: arma la lista de kid_ids a consultar y valida ownership si aplica
     async function resolveStudentKidIds() {
       const kidIds = new Set();
 
-      // 1) Regla de negocio: estudiante-adulto o estudiante con hijos también
-      //    -> Todos los Kid con parent_id = authId
+      // 1) Buscar Kids donde el estudiante es el padre (para menores)
       const ownKids = await pool.query(`SELECT id FROM Kid WHERE parent_id = $1`, [authId]);
       for (const r of ownKids.rows) kidIds.add(r.id);
-      try {
-        const link = await pool.query(
-          `SELECT kid_id FROM Student_User WHERE user_id = $1`,
-          [authId]
-        );
-        for (const r of link.rows) kidIds.add(r.kid_id);
-      } catch {
-      }
 
       return Array.from(kidIds);
     }
@@ -179,6 +174,7 @@ export async function getStudentPaymentHistory(req, res) {
     // ===== Rama por rol =====
     if (role === 'estudiante') {
       const allowedKidIds = await resolveStudentKidIds();
+      console.log('[getStudentPaymentHistory] allowedKidIds:', allowedKidIds);
 
       if (requestedKidId) {
         // Debe pertenecerle
@@ -189,15 +185,26 @@ export async function getStudentPaymentHistory(req, res) {
         }
         // Consultar SOLO ese kid_id
         const items = await queryHistoryForKidIds([requestedKidId]);
+        console.log('[getStudentPaymentHistory] items (single kid):', items.length);
         return res.json({ items });
       }
 
-      // Sin kid_id: traer historial para TODOS sus kid_ids (adulto = él mismo)
-      if (allowedKidIds.length === 0) {
-        return res.status(404).json({ message: 'Student has no Kid records.' });
-      }
-      const items = await queryHistoryForKidIds(allowedKidIds);
-      return res.json({ items });
+      // Sin kid_id especificado: buscar ambos tipos de bookings
+      // 1. Bookings con kid_id (cuando el estudiante se registró a sí mismo como "hijo")
+      // 2. Bookings sin kid_id (cuando el estudiante hace bookings directos como adulto)
+      console.log('[getStudentPaymentHistory] Buscando pagos del estudiante (ambos tipos)');
+      const itemsWithKid = allowedKidIds.length > 0 
+        ? await queryHistoryForKidIds(allowedKidIds) 
+        : [];
+      const itemsWithoutKid = await queryHistoryForUser(authId);
+      
+      // Combinar ambos resultados
+      const allItems = [...itemsWithKid, ...itemsWithoutKid];
+      console.log('[getStudentPaymentHistory] items con kid_id:', itemsWithKid.length);
+      console.log('[getStudentPaymentHistory] items sin kid_id:', itemsWithoutKid.length);
+      console.log('[getStudentPaymentHistory] total items:', allItems.length);
+      
+      return res.json({ items: allItems });
     }
 
     if (role === 'padre') {
@@ -232,7 +239,47 @@ export async function getStudentPaymentHistory(req, res) {
     return res.status(500).json({ message: 'Server error' });
   }
 
-  // === Helper local ===
+  // === Helper local para estudiantes adultos sin kid_id ===
+  async function queryHistoryForUser(userId) {
+    console.log('[queryHistoryForUser] userId:', userId);
+    const q = `
+      SELECT
+        p.id                AS payment_id,
+        p.payment_date      AS payment_date,
+        p.total             AS payment_total,
+        p.payment_method    AS payment_method,
+        p.state             AS payment_state,
+        p.note              AS user_note,
+        p.admin_note        AS admin_note,
+        p.reference_pic     AS reference_pic,
+        pi.id               AS item_id,
+        pi.subtotal         AS subtotal,
+        pi.unit_cost        AS unit_cost,
+        pi.booking_id       AS booking_id,
+        -- booking side
+        c.name              AS course_name,
+        s.schedule_date     AS schedule_date,
+        NULL                AS kid_id,
+        u.name              AS kid_name
+      FROM Payment p
+      JOIN Payment_item pi   ON pi.payment_id = p.id
+      JOIN Booking bk        ON bk.id = pi.booking_id
+      JOIN "User" u          ON u.id = bk.user_id
+      JOIN Course c          ON c.id = bk.course_id
+      LEFT JOIN Schedule s   ON s.id = bk.schedule_id
+      WHERE bk.user_id = $1
+        AND bk.kid_id IS NULL
+      ORDER BY p.payment_date DESC, p.id DESC, pi.id DESC;
+    `;
+    const { rows } = await pool.query(q, [userId]);
+    console.log('[queryHistoryForUser] rows encontradas:', rows.length);
+    if (rows.length > 0) {
+      console.log('[queryHistoryForUser] Primera fila:', rows[0]);
+    }
+    return rows.map(normalizeRow);
+  }
+
+  // === Helper local para estudiantes con hijos (kid_id) ===
   async function queryHistoryForKidIds(kidIds) {
     // Genera placeholders para IN (...)
     const placeholders = kidIds.map((_, i) => `$${i + 1}`).join(', ');

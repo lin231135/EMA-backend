@@ -12,8 +12,8 @@ const router = Router();
 // GET /api/parent/payments/history[?kid_id=123]
 router.get('/parent/payments/history', verifyToken, getParentPaymentHistory);
 
-// ESTUDIANTE (por KID)
-// GET /api/student/payments/history?kid_id=123
-router.get('/student/payments/history', verifyToken, getStudentPaymentHistory);
+// ESTUDIANTE
+// GET /api/students/payments/history (sin kid_id para estudiantes adultos)
+router.get('/students/payments/history', verifyToken, getStudentPaymentHistory);
 
 export default router;

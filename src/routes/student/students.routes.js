@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { addNote, getFeedback, getTodayClasses, getNextClasses } from '../../controllers/student/student.controller.js';
 import { getCalendar, getClassFeedback } from '../../controllers/schedule.controller.js';
 import { getPendingPayments, createStudentPayment } from '../../controllers/student/studentPayment.controller.js';
+import { uploadPaymentProof } from '../../controllers/student/studentPaymentProof.controller.js';
 import { getBooks, getBook } from '../../controllers/book.controller.js';
 import { getUnpaidBookingsByStudent } from '../../controllers/admin/bookings.controller.js';
 import { verifyToken /*, isStudent */ } from '../../middlewares/auth.js';
@@ -21,6 +22,7 @@ router.get('/calendar/bookings/:bookingId/feedback', getClassFeedback);
 /* Endpoints de Payments */
 router.get('/payments/pending', verifyToken, getPendingPayments);
 router.post('/payments', verifyToken, createStudentPayment);
+router.post('/payments/upload-proof', verifyToken, uploadPaymentProof);
 
 /* Endpoints de Bookings */
 router.get('/bookings/unpaid', verifyToken, getUnpaidBookingsByStudent);
