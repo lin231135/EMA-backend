@@ -1,5 +1,5 @@
 // src/controllers/admin/reports.global.controller.js
-import pool from '../../db/connection';
+import pool from '../../db/connection.js';
 
 // Helper para convertir valores a número
 const num = (v) => (v == null ? 0 : Number(v));
