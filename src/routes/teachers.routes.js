@@ -1,3 +1,5 @@
+// src/routes/teacher.routes.js
+
 import { Router } from 'express';
 import {
   getCalendar,
@@ -14,6 +16,7 @@ import {
 
 import { getStudentsReport } from '../controllers/student.report.controller.js';
 import materialRoutes from './teacher/material.routes.js';
+import PaymentReportingController from '../controllers/teacher/paymentReporting.controller.js';
 
 const router = Router();
 
@@ -36,5 +39,10 @@ router.get('/calendar/today-classes', getTodayClasses);
 
 /** Endpoints de Materiales */
 router.use('/materials', materialRoutes);
+
+/** Endpoints de payment reporting para maestros */
+router.get('/payments/pending', PaymentReportingController.getPendingPayments);
+router.put('/payments/:paymentId/revision', PaymentReportingController.updatePaymentStatus);
+router.post('/payments/report', PaymentReportingController.reportIncorrectPayment);
 
 export default router;
