@@ -1,6 +1,8 @@
 import pool from '../../db/connection.js';
 
-// Alias para mantener consistencia con el código existente
+/**
+ * Alias para mantener consistencia con el código existente
+ */
 const db = pool;
 
 /**
@@ -10,7 +12,15 @@ const db = pool;
  */
 export const getPayments = async (req, res) => {
   try {
-    // Consulta optimizada: un registro por pago con estudiantes agrupados
+    const { startDate, endDate } = req.query;
+
+    console.log('Parámetros recibidos:', { startDate, endDate });
+
+    // Ajustar las fechas para incluir todo el día
+    const adjustedStartDate = startDate ? `${startDate} 00:00:00` : null;
+    const adjustedEndDate = endDate ? `${endDate} 23:59:59` : null;
+
+    // Consulta optimizada con filtro de rango de fechas opcional
     const query = `
       SELECT 
         p.id,
@@ -36,10 +46,18 @@ export const getPayments = async (req, res) => {
         ) as students_count
       FROM Payment p
       JOIN "User" u ON p.user_id = u.id
+      WHERE ($1::TIMESTAMP IS NULL OR p.payment_date >= $1::TIMESTAMP)
+        AND ($2::TIMESTAMP IS NULL OR p.payment_date <= $2::TIMESTAMP)
       ORDER BY p.payment_date DESC, p.id DESC
     `;
 
-    const result = await db.query(query);
+    // Log para verificar la consulta SQL
+    console.log('Consulta ejecutada:', query, [adjustedStartDate, adjustedEndDate]);
+
+    const result = await db.query(query, [adjustedStartDate, adjustedEndDate]);
+
+    // Log para verificar los resultados
+    console.log('Resultados obtenidos:', result.rows);
 
     res.status(200).json(result.rows);
 
